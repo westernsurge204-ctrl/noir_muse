@@ -320,7 +320,6 @@ function refreshOutfitOptions(keepCurrent){
  const style=$('style'),outfit=$('outfit');if(!style||!outfit)return;
  const current=outfit.value,group=outfitGroupForStyle(style.value);
  const custom=getCustomLibrary(),items=[...new Set([...(outfitGroups[group]||outfitGroups.casual),...(custom.outfit||[])])];
- // Keep a current/custom recipe value available rather than silently losing saved work.
  if(keepCurrent&&current&&!items.includes(current))items.unshift(current);
  outfit.innerHTML='';
  items.forEach(value=>outfit.add(new Option(value,value)));
@@ -328,8 +327,58 @@ function refreshOutfitOptions(keepCurrent){
  if(items.includes(current))outfit.value=current;
  else outfit.value=items[0]||'';
 }
-$('style').addEventListener('change',()=>{refreshOutfitOptions(false);build();});
+const outfitDetailGroups={
+ indian:{
+ neck:['Sweetheart blouse with elbow sleeves','Square-neck blouse with short sleeves','High-neck embroidered blouse','Boat-neck blouse with elbow sleeves','V-neck blouse with short sleeves','Puff sleeves with gathered shoulders','Full sleeves with cuff','Sleeveless high-neck blouse','Back-tie blouse','Open-back blouse with secure ties','Mandarin collar kurta','Round-neck kurta with piping','Keyhole neckline with modest cut','Scalloped neckline with delicate edging','Boat neck with puff sleeves','Collared kurta neckline','Sweetheart neckline with dupatta drape','Three-quarter sleeves with embroidered cuffs','Elbow sleeves with contrast border','Sheer full sleeves with lining','Sleeveless kurta with jacket'],
+ fabric:['Banarasi silk with woven zari','Kanjivaram silk with rich border','Soft chiffon with fluid saree drape','Georgette with fine texture','Chikankari embroidery on cotton','Chanderi silk-cotton with subtle sheen','Raw silk with natural texture','Organza with delicate overlay','Cotton handloom weave','Bandhani-dyed cotton or silk','Velvet with restrained embroidery','Tissue silk with soft sheen','Crepe with fluid drape','Lightweight muslin','Mirror-work embroidered fabric','Brocade with woven motifs','Linen-cotton blend','Phulkari embroidery on cotton'],
+ pattern:['Zari border and woven motifs','Fine gold thread embroidery','Chikankari floral embroidery','Bandhani tie-dye dots','Ikat woven pattern','Paisley motifs with delicate border','Mirror-work accents','Tone-on-tone threadwork','Gota patti trim','Phulkari embroidery','Kantha stitch detail','Temple border motifs','Scalloped embroidered edging','Fine beadwork at neckline','Contrast piping on cuffs','Hand-embroidered floral motifs','Minimal border, clean fabric','All-over buti motifs','Embroidered sleeve cuffs and hem'],
+ jewelry:['Jhumka earrings and slim bangles','Kundan choker and small studs','Oxidised silver earrings and rings','Pearl necklace with small earrings','Gold chain and slim bangles','Temple jewellery with matching earrings','Delicate mangalsutra-style chain','Chandbali earrings and bangles','Polki necklace with understated studs','Glass bangles and small jhumkas','Silver anklet and delicate rings','Minimal silver necklace and rings','Small bindi with jhumka earrings','Pearl studs and a delicate chain','Traditional bangles with a simple pendant','No visible jewellery'],
+ outfitNotes:['Dupatta draped over one shoulder with natural folds','Dupatta draped across both shoulders','Dupatta loosely gathered at the elbows','Saree pallu neatly over the shoulder','Saree pallu softly pleated and draped','Fine embroidery concentrated at neckline and cuffs','Decorative woven border along saree hem','Blouse and saree border coordinated subtly','Natural pleats and realistic fabric weight','Layered dupatta with visible edge detailing','Traditional styling with understated accessories','Matching blouse, dupatta and bottom fabric','Comfortable everyday ethnic styling','Festive details, balanced and not overdecorated']
+ },
+ fusion:{
+ neck:['Square-neck blouse with short sleeves','Structured sleeveless blouse','Sweetheart blouse with elbow sleeves','Asymmetric neckline with secure fit','Mandarin collar with clean finish','Cape overlay with simple neckline','Modern halter blouse','Three-quarter sleeves with embroidered cuffs','Open jacket over a modest neckline'],
+ fabric:['Raw silk with soft structure','Chanderi silk-cotton','Organza overlay over a lined base','Crepe with fluid drape','Brocade accent panels','Linen-silk blend','Cotton-silk blend','Embroidered tulle overlay','Matte satin with controlled sheen'],
+ pattern:['Fine zari accent border','Tone-on-tone embroidery','Geometric hand embroidery','Mirror-work accents','Minimal metallic threadwork','Contrast piping','Scalloped edging','Delicate beadwork','Clean solid colour'],
+ jewelry:['Statement earrings with minimal necklace','Oxidised silver hoops and rings','Layered delicate chains','Kundan earrings with slim bangles','Pearl studs and a modern cuff','Minimal silver jewellery','Gold hoops and a slim bracelet']
+ },
+ western:{
+ neck:['Square neckline, thin straps','Sweetheart neckline','Scoop neck, wide straps','Halter neckline','One-shoulder neckline','Off-shoulder neckline','Boat neck, elbow sleeves','V-neck with short sleeves','Crew neck, short sleeves','High neck, sleeveless','Collared shirt neckline','Puff sleeves with square neckline','Cowl neckline','Strapless neckline with secure fit','Long sleeves with fitted cuffs'],
+ fabric:['Cotton poplin','Linen with natural creases','Soft silk with gentle sheen','Satin with controlled highlights','Crepe with soft structure','Ribbed knit','Jersey knit','Lightweight denim','Velvet with low sheen','Chiffon with fluid drape','Tulle layered skirt','Matte cotton jersey','Wool-blend tailoring'],
+ pattern:['Solid colour, minimal details','Small floral print','Fine stripes','Subtle checks','Botanical print','Geometric print','Pleated texture','Scalloped edging','Contrast piping','Abstract brush pattern','Tone-on-tone texture'],
+ jewelry:['Small silver hoops','Pearl studs and delicate chain','Fine silver necklace and simple rings','Gold hoops and slim bracelet','Minimal watch and rings','Delicate layered necklaces','Statement earrings, no necklace','No visible jewellery']
+ },
+ formal:{
+ neck:['Collared shirt neckline','Boat neck with elbow sleeves','High neck, full sleeves','Square neckline with short sleeves','Notched lapel blazer','Peak lapel tailored jacket','Modest V-neck blouse','Long sleeves with cuff','Sleeveless tailored cut'],
+ fabric:['Wool-blend tailoring','Crepe with soft structure','Matte suiting fabric','Cotton poplin','Silk-blend blouse','Fine-gauge knit','Linen blend with clean drape','Structured twill','Matte satin accents'],
+ pattern:['Solid colour, minimal details','Subtle pinstripes','Fine herringbone weave','Tonal checks','Minimal contrast piping','Clean monochrome styling','Small understated geometric print'],
+ jewelry:['Small pearl studs','Minimal watch and rings','Fine silver necklace','Small gold hoops','Delicate pendant and stud earrings','No visible jewellery']
+ },
+ resort:{
+ neck:['Spaghetti straps, clean neckline','Square neckline, thin straps','Halter neckline','Off-shoulder neckline','Scoop neck, wide straps','Open-collar linen shirt','One-shoulder neckline','Relaxed camp collar'],
+ fabric:['Linen with natural creases','Cotton voile','Crochet texture with lined base','Lightweight cotton','Soft rayon with fluid drape','Matte swim fabric','Cotton-silk blend','Chiffon with fluid drape'],
+ pattern:['Tropical botanical print','Solid colour, minimal details','Small floral print','Soft palm-leaf pattern','Fine stripes','Hand-block print','Subtle geometric print'],
+ jewelry:['Fine silver necklace and simple rings','Small hoops and a thin bracelet','Shell pendant with understated earrings','Minimal gold hoops','Anklet and slim rings','No visible jewellery']
+ },
+ casual:{neck:['Crew neck, short sleeves','Scoop neck, wide straps','Square neckline, thin straps','V-neck, short sleeves','Collared shirt neckline','Boat neck, elbow sleeves','Soft cardigan over a simple top'],fabric:['Cotton jersey','Linen with natural creases','Ribbed knit','Lightweight denim','Cotton poplin','Jersey knit','Soft cotton-silk blend'],pattern:['Solid colour, minimal details','Fine stripes','Small floral print','Subtle checks','Botanical print','Minimal contrast piping'],jewelry:['Fine silver necklace and simple rings','Small silver hoops','Minimal watch and rings','Pearl studs and delicate chain','No visible jewellery']},
+ party:{neck:['Sweetheart neckline','One-shoulder neckline','Square neckline, thin straps','Halter neckline','Off-shoulder neckline','Cowl neckline','Strapless neckline with secure fit','Long sleeves with fitted cuffs'],fabric:['Satin with controlled highlights','Velvet, low sheen','Crepe with soft structure','Sequins used sparingly','Soft silk with gentle sheen','Chiffon with fluid drape'],pattern:['Subtle beadwork','Sequins used sparingly','Solid colour, minimal details','Tone-on-tone embroidery','Scalloped edging','Minimal metallic threadwork'],jewelry:['Statement earrings, delicate bracelet','Pearl studs and delicate chain','Fine silver necklace and simple rings','Kundan earrings with slim bangles','Minimal jewellery to balance embellished fabric']}
+};
+function refreshStyleDetails(keepCurrent){
+ const group=outfitGroupForStyle($('style').value);
+ const key=group==='indian'?'indian':group==='fusion'?'fusion':group==='western'?'western':group==='formal'?'formal':group==='resort'?'resort':group==='party'?'party':'casual';
+ const data=outfitDetailGroups[key]||outfitDetailGroups.casual,custom=getCustomLibrary();
+ ['neck','fabric','pattern','jewelry','outfitNotes'].forEach(id=>{
+  const el=$(id);if(!el||el.tagName!=='SELECT')return;
+  const current=el.value,values=[...(data[id]||[])];
+  if(id==='outfitNotes'&&key==='indian')values.push(...(data.outfitNotes||[]));
+  const items=[...new Set([...(keepCurrent&&current?[current]:[]),...values,...(custom[id]||[])])];
+  el.innerHTML='';items.forEach(v=>el.add(new Option(v,v)));
+  el.add(new Option('＋ Enter a custom option…','__custom__'));
+  if(items.includes(current))el.value=current;else el.value=items[0]||'';
+ });
+}
+$('style').addEventListener('change',()=>{refreshOutfitOptions(false);refreshStyleDetails(false);build();});
 refreshOutfitOptions(true);
+refreshStyleDetails(true);
 
 const HOME_DNA_IDS=['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','details','lock'];
 const HOME_OUTFIT_IDS=['style','outfit','fit','neck','fabric','colors','pattern','jewelry','outfitNotes'];
