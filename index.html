@@ -47,6 +47,9 @@ textarea{min-height:70px}.hint,.notice{font-size:10px}.btn{font-size:11px;paddin
 .homePage{max-width:1050px;margin:0 auto}.homeIntro{padding:24px 0 18px}.homeIntro h2{font-size:clamp(25px,4vw,38px);margin:7px 0}.homeIntro p{color:var(--muted);margin:0}.homeToolbar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.characterGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.characterCard{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px;min-width:0}.characterCard h3{margin:0 0 4px;font-size:15px;overflow-wrap:anywhere}.characterCard p{color:var(--muted);font-size:11px;margin:0 0 12px}.characterCard .btns{gap:6px}.emptyHome{border:1px dashed #57446f;border-radius:15px;padding:25px;color:var(--muted);text-align:center}.pageNav{display:flex;gap:8px;align-items:center}.sceneShelf{border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0}.sceneShelf h4{margin:0 0 8px}.sceneList{display:flex;gap:6px;flex-wrap:wrap}.sceneChip{border:1px solid #57446f;border-radius:9px;background:#211c27;color:var(--text);padding:7px 9px;font-size:11px}
 @media(max-width:700px){.characterGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.homeIntro{padding-top:15px}.characterCard{padding:11px}}
 @media(max-width:420px){.characterGrid{grid-template-columns:1fr}.homeToolbar .btn{flex:1}}
+
+/* Persistent page tabs: reachable on every screen size */
+#appTabs{position:fixed;z-index:9999;left:50%;transform:translateX(-50%);bottom:max(10px,env(safe-area-inset-bottom));width:min(560px,calc(100% - 20px));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:7px;background:rgba(20,16,24,.97);border:1px solid #51425e;border-radius:16px;box-shadow:0 8px 30px #0008;backdrop-filter:blur(16px)}#appTabs button{min-height:43px;border:1px solid transparent;border-radius:10px;background:transparent;color:#d9d0df;font-size:12px;font-weight:650;padding:8px 4px;cursor:pointer;touch-action:manipulation}#appTabs button[aria-current="page"]{background:#c29af5;color:#1b1225}body{padding-bottom:86px}#homePage[hidden],#editorPage[hidden]{display:none!important}.pageNav{position:sticky;top:82px;z-index:40;background:rgba(20,16,24,.96);padding:7px 0;border-radius:10px;backdrop-filter:blur(10px)}
 </style></head>
 <body>
 <header><div class="brand"><div class="logo">N</div><div><h1>NOIR MUSE</h1><small>Character & photo prompt studio</small></div></div><span class="tag">PRIVATE · SAVED IN THIS BROWSER</span></header>
@@ -103,7 +106,9 @@ textarea{min-height:70px}.hint,.notice{font-size:10px}.btn{font-size:11px;paddin
 </div></details><div class="sceneShelf"><h4>Saved scenes for this character</h4><div class="btns"><input id="sceneName" placeholder="Scene name, e.g. Poolside morning" style="flex:1;min-width:130px"><button class="btn small" id="saveScene">Save current scene</button></div><div id="sceneList" class="sceneList" style="margin-top:8px"></div></div><div class="btns"><button class="btn primary" id="generate">Generate prompt ↗</button><button class="btn" id="saveDNA">Save character DNA</button><button class="btn subtle" id="loadDNA">Load saved DNA</button></div><p class="notice">Your settings are saved in this browser only. Clearing browser data may erase them. No account or backend is used.</p>
 </div></section>
 <aside class="panel output"><div class="panelHead"><h3>Your generated prompt</h3><span class="tag" id="wordcount">Ready</span></div><div class="panelBody"><div id="output" class="outputArea">Your standalone prompt will appear here. Choose the character details and scene, then tap Generate prompt.</div><div class="stats"><span class="stat">Standalone output</span><span class="stat">Identity-aware</span><span class="stat">Photo realism</span></div><div class="outputActions"><button class="btn primary" id="copy">Copy prompt</button><button class="btn" id="download">Download .txt</button><button class="btn" id="regen">Refresh prompt</button></div><div class="quality" id="quality"><strong>Quality check</strong><br>Generate a prompt to check for missing or conflicting details.</div><p class="notice">Tip: use the same Character DNA each time for consistency. Scene details can change independently.</p></div></aside></div>
-</section><div class="footer">NOIR MUSE · A personal prompt studio · Browser storage only</div></main><div id="toast"></div>
+</section><div class="footer">NOIR MUSE · A personal prompt studio · Browser storage only</div></main>
+<nav id="appTabs" aria-label="Main navigation"><button type="button" id="tabHome" aria-current="page">⌂ Home</button><button type="button" id="tabEditor">＋ Editor</button><button type="button" id="tabScenes">▧ Scenes</button></nav>
+<div id="toast"></div>
 <script>
 const ids=['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','details','lock','style','outfit','fit','neck','fabric','colors','pattern','jewelry','outfitNotes','location','weather','pose','expression','framing','capture','camera','lighting','sceneNotes','realism','detailLevel','negative','extra'];
 const $=id=>document.getElementById(id);let lastPrompt='';
@@ -285,5 +290,27 @@ $('saveProfile').addEventListener('click',()=>{const n=saveActiveCharacter();$('
 $('loadProfile').addEventListener('click',()=>{const n=$('profileList').value;if(n)openCharacter(n)});
 $('saveScene').addEventListener('click',saveScene);
 renderHome();
+
+function showAppPage(page){
+ const home=$('homePage'),editor=$('editorPage');if(!home||!editor)return;
+ home.hidden=page!=='home';editor.hidden=page==='home';
+ $('tabHome').setAttribute('aria-current',page==='home'?'page':'false');
+ $('tabEditor').setAttribute('aria-current',page==='editor'?'page':'false');
+ $('tabScenes').setAttribute('aria-current',page==='scenes'?'page':'false');
+ if(page==='home')renderHome();
+ if(page==='editor'&&!activeCharacter){$('editingLabel').textContent='New character';}
+ if(page==='scenes'){
+  if(!activeCharacter){const keys=Object.keys(storeObj(PROFILE_KEY));if(keys.length)openCharacter(keys[0]);else createCharacter();}
+  showAppPage('editor');$('tabScenes').setAttribute('aria-current','page');
+  setTimeout(()=>{const shelf=document.querySelector('.sceneShelf');if(shelf)shelf.scrollIntoView({behavior:'smooth',block:'start'});},80);
+ }else window.scrollTo({top:0,behavior:'smooth'});
+}
+$('tabHome').addEventListener('click',()=>showAppPage('home'));
+$('tabEditor').addEventListener('click',()=>{if(!activeCharacter&&!$('name').value.trim())createCharacter();else showAppPage('editor')});
+$('tabScenes').addEventListener('click',()=>showAppPage('scenes'));
+const previousCreateCharacter=createCharacter;
+createCharacter=function(){previousCreateCharacter();$('tabHome').setAttribute('aria-current','false');$('tabEditor').setAttribute('aria-current','page');$('tabScenes').setAttribute('aria-current','false')};
+const previousOpenCharacter=openCharacter;
+openCharacter=function(name){previousOpenCharacter(name);$('tabHome').setAttribute('aria-current','false');$('tabEditor').setAttribute('aria-current','page');$('tabScenes').setAttribute('aria-current','false')};
 
 </script></body></html>
