@@ -139,9 +139,10 @@ let checks=[];if(!clean(v.name))checks.push('Add a character name.');if(!clean(v
 $('quality').innerHTML='<strong>Quality check</strong><br>'+(checks.length?checks.map(s=>'• '+s).join('<br>'):'✓ Core fields are present. No obvious capture/lighting conflicts detected.')+'<br><span style="color:#9d91a5">Review the wording and edit any field before copying.</span>';return lastPrompt
 }
 $('generate').onclick=build;$('regen').onclick=build;
-$('copy').onclick=async()=>{if(!lastPrompt)build();try{await navigator.clipboard.writeText(lastPrompt);toast('Prompt copied')}catch(e){const t=document.createElement('textarea');t.value=lastPrompt;document.body.append(t);t.select();document.execCommand('copy');t.remove();toast('Prompt copied')}};
+$('copy').type='button';
+$('copy').onclick=async e=>{if(e)e.preventDefault();try{const prompt=lastPrompt||build();if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(prompt);toast('Prompt copied to clipboard');return}const t=document.createElement('textarea');t.value=prompt;t.setAttribute('readonly','');t.style.position='fixed';t.style.opacity='0';t.style.fontSize='16px';document.body.appendChild(t);t.focus();t.select();t.setSelectionRange(0,t.value.length);const ok=document.execCommand('copy');t.remove();if(ok){toast('Prompt copied to clipboard')}else{toast('Copy blocked — tap and hold the prompt text, then choose Copy')}}catch(err){toast('Copy blocked — tap and hold the prompt text, then choose Copy')}};
 $('download').onclick=()=>{if(!lastPrompt)build();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lastPrompt],{type:'text/plain'}));a.download='noir-muse-prompt.txt';a.click();URL.revokeObjectURL(a.href)};
-$('saveDNA').onclick=()=>{const d={};['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','bust','waist','hips','shoulders','physique','details','lock'].forEach(id=>d[id]=read(id));localStorage.setItem('noirMuseDNA',JSON.stringify(d));toast('Character DNA saved in this browser')};
+$('saveDNA').type='button';$('saveDNA').onclick=e=>{if(e)e.preventDefault();try{const d={};['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','bust','waist','hips','shoulders','physique','details','lock'].forEach(id=>d[id]=read(id));localStorage.setItem('noirMuseDNA',JSON.stringify(d));toast('Character DNA saved on this device')}catch(err){toast('Could not save DNA — browser storage may be blocked or full')}};
 $('loadDNA').onclick=()=>{try{const d=JSON.parse(localStorage.getItem('noirMuseDNA')||'null');if(!d){toast('No saved DNA in this browser yet');return}Object.keys(d).forEach(id=>{if($(id)){if($(id).type==='checkbox')$(id).checked=d[id];else $(id).value=d[id]}});toast('Character DNA loaded')}catch(e){toast('Could not load saved DNA')}};
 const sceneDefaults={style:'Contemporary casual',outfit:'Chic fitted pink outfit with delicate straps',fit:'Natural fitted, comfortable',neck:'Delicate spaghetti straps, clean neckline',fabric:'Matte soft fabric, realistic texture',colors:'Dusty pink, subtle silver accents',pattern:'Minimal, clean, small delicate details',jewelry:'Fine silver necklace and simple rings',outfitNotes:'',location:'A relaxed resort poolside',weather:'Clear morning, soft natural daylight',pose:'Sitting comfortably, relaxed posture',expression:'Playful, relaxed expression',framing:'Full-body casual snapshot',capture:'A friend took a quick smartphone photo',camera:'Ordinary smartphone camera, natural perspective',lighting:'Available natural light, believable soft shadows',sceneNotes:''};
 $('reset').onclick=()=>{Object.entries(sceneDefaults).forEach(([id,val])=>$(id).value=val);toast('Scene settings reset');build()};
@@ -456,15 +457,22 @@ function createCharacter(){activeCharacter='';$('homePage').hidden=true;$('edito
 function openCharacter(name){const p=storeObj(PROFILE_KEY)[name];if(!p)return;activeCharacter=name;$('homePage').hidden=true;$('editorPage').hidden=false;$('editingLabel').textContent='Editing · '+name;$('profileName').value=name;applyFields(p.dna);applyFields(p.outfit);if(p.scene)applyFields(p.scene);$('protectDNA').checked=true;syncDNAProtection();renderScenes();build();window.scrollTo(0,0)}
 function saveActiveCharacter(){
  const name=($('profileName').value.trim()||$('name').value.trim()||'Untitled character');
- const profiles=storeObj(PROFILE_KEY);profiles[name]={dna:fields(HOME_DNA_IDS),outfit:fields(HOME_OUTFIT_IDS),scene:fields(SCENE_IDS)};
- localStorage.setItem(PROFILE_KEY,JSON.stringify(profiles));activeCharacter=name;$('profileName').value=name;$('editingLabel').textContent='Editing · '+name;refreshSelect('profileList',PROFILE_KEY);$('profileList').value=name;renderHome();toast('Character saved');return name;
+ try{
+  const profiles=storeObj(PROFILE_KEY);
+  profiles[name]={dna:fields(HOME_DNA_IDS),outfit:fields(HOME_OUTFIT_IDS),scene:fields(SCENE_IDS)};
+  localStorage.setItem(PROFILE_KEY,JSON.stringify(profiles));
+  const check=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}');
+  if(!check[name])throw new Error('Save verification failed');
+  activeCharacter=name;$('profileName').value=name;$('editingLabel').textContent='Editing · '+name;
+  refreshSelect('profileList',PROFILE_KEY);$('profileList').value=name;renderHome();toast('Character saved on this device');return name;
+ }catch(err){console.error('Noir Muse character save failed',err);toast('Could not save — browser storage may be blocked or full');return '';}
 }
 function renderScenes(){const list=$('sceneList');if(!list)return;list.innerHTML='';const data=storeObj(SCENE_KEY)[activeCharacter]||{};Object.keys(data).forEach(name=>{const b=document.createElement('button');b.className='sceneChip';b.textContent=name;b.onclick=()=>{applyFields(data[name]);$('sceneName').value=name;build();toast('Scene loaded')};list.append(b)});if(!Object.keys(data).length){const span=document.createElement('span');span.className='hint';span.textContent='Save different moments here; each belongs to this character.';list.append(span)}}
 function saveScene(){if(!activeCharacter)activeCharacter=saveActiveCharacter();else saveActiveCharacter();const name=$('sceneName').value.trim();if(!name){toast('Name this scene first');return}const all=storeObj(SCENE_KEY);all[activeCharacter]=all[activeCharacter]||{};all[activeCharacter][name]=fields(SCENE_IDS);localStorage.setItem(SCENE_KEY,JSON.stringify(all));renderScenes();renderHome();toast('Scene saved for '+activeCharacter)}
 $('newCharacter').addEventListener('click',createCharacter);$('homeRefresh').addEventListener('click',renderHome);$('backHome').addEventListener('click',()=>{if(!activeCharacter&&$('name').value.trim())saveActiveCharacter();$('editorPage').hidden=true;$('homePage').hidden=false;renderHome();window.scrollTo(0,0)});
-$('saveProfile').addEventListener('click',()=>{const n=saveActiveCharacter();$('profileList').value=n;renderScenes()});
+$('saveProfile').type='button';$('saveProfile').addEventListener('click',e=>{e.preventDefault();const n=saveActiveCharacter();if(n){$('profileList').value=n;renderScenes()}});
 $('loadProfile').addEventListener('click',()=>{const n=$('profileList').value;if(n)openCharacter(n)});
-$('saveScene').addEventListener('click',saveScene);
+$('saveScene').type='button';$('saveScene').addEventListener('click',e=>{e.preventDefault();saveScene()});
 renderHome();
 
 function showAppPage(page){
