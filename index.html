@@ -262,6 +262,75 @@ syncDNAProtection();
 
 addCustomToSelects();
 
+// Expanded, style-aware outfit catalogue. Changing style filters the garment menu,
+// so Indian traditional never mixes in Western dresses or streetwear.
+const outfitGroups={
+ indian:[
+ 'Saree with fitted blouse','Banarasi silk saree','Kanjivaram silk saree','Chiffon saree','Georgette saree','Linen saree','Cotton handloom saree','Bandhani saree','Chanderi saree','Paithani saree','Tant saree','Organza saree','Pre-draped saree','Lehenga choli','Embroidered bridal lehenga','Festive lehenga with dupatta','Anarkali suit','Floor-length Anarkali','Straight-cut salwar kameez','Patiala suit','Churidar with long kurta','Sharara set','Gharara set','Palazzo suit with kurta','Punjabi suit','Chikankari kurta set','Straight kurta and cigarette pants','A-line kurta with trousers','Kurta with palazzo pants','Kurta with tailored trousers','Cotton kurti and jeans','Long kurti with leggings','Dhoti pants with short kurta','Ethnic jacket with kurta set','Traditional skirt and blouse','Blouse and long ethnic skirt','Festive silk suit','Simple everyday salwar suit','Dupatta-led three-piece suit','Traditional bridal outfit','Indian formal suit set'
+ ],
+ fusion:[
+ 'Indo-western co-ord set','Draped dhoti pants with crop top','Indo-western draped skirt','Crop top and long skirt','Jacket-style ethnic set','Cape with fitted trousers','Saree with contemporary blouse','Pre-draped saree gown','Kurta with wide-leg trousers','Embroidered blazer with trousers','Ethnic vest and palazzo pants','Asymmetric tunic with skirt','Fusion lehenga with structured top','Corset-style blouse with lehenga','Dhoti skirt set','Modern sharara set','Peplum top with ethnic skirt','Indo-western jumpsuit','Longline jacket over a dress','Contemporary festive co-ord'
+ ],
+ western:[
+ 'Mini dress','Fitted mini dress','A-line mini dress','Shift mini dress','Bodycon mini dress','Midi dress','A-line midi dress','Wrap midi dress','Slip midi dress','Shirt midi dress','Pleated midi dress','Maxi dress','Floral maxi dress','Slip maxi dress','Tiered maxi dress','Satin evening gown','Cocktail dress','Little black dress','Sundress','Summer sundress','Wrap dress','Fit-and-flare dress','Off-shoulder dress','One-shoulder dress','Halter-neck dress','Square-neck dress','Knit dress','Sweater dress','Denim dress','Jumpsuit','Wide-leg jumpsuit','Tailored playsuit','Co-ord top and skirt','Fitted top and jeans','Wide-leg jeans and shirt','Straight-leg jeans and blouse','Linen trousers and tank','Pleated skirt and knit top','Shorts and linen shirt','Cropped cardigan and skirt','Blazer and jeans','Trench coat with denim'
+ ],
+ formal:[
+ 'Tailored blazer and trousers','Formal trouser suit','Women’s pantsuit','Matching blazer and midi skirt','Structured office dress','Sheath dress','Formal midi dress','Formal maxi dress','Long-sleeve midi dress','Office shirt and tailored trousers','Silk blouse and straight-leg trousers','Button-down shirt and pencil skirt','Pencil skirt and fitted blouse','Wide-leg formal trousers and blouse','Waistcoat and tailored trousers','Three-piece tailored suit','Tuxedo-inspired suit','Formal jumpsuit','Elegant evening suit','Minimalist black dress','Business-casual co-ord','Longline blazer and trousers','Structured peplum jacket and trousers','Formal knit dress','Modest formal dress'
+ ],
+ party:[
+ 'Cocktail mini dress','Sequin mini dress','Satin midi dress','Velvet midi dress','One-shoulder party dress','Off-shoulder evening dress','Strapless evening gown','Satin maxi gown','Sequinned evening gown','Elegant cocktail dress','Statement co-ord set','Corset top and tailored trousers','Satin top and wide-leg pants','Party jumpsuit','Velvet pantsuit','Festive evening lehenga','Embellished sharara set','Glamorous saree with blouse','Wedding guest midi dress','Wedding guest maxi dress'
+ ],
+ resort:[
+ 'Resort co-ord set','Linen co-ord set','Linen shirt and shorts','Lightweight beach cover-up','Flowy beach maxi dress','Crochet beach dress','Swimwear with cover-up','One-piece swimsuit','Bikini with sarong','Kaftan','Cotton sundress','Sleeveless maxi dress','Relaxed linen trousers and tank','Wide-leg trousers and breezy blouse','Tropical print co-ord','Wrap skirt and crop top','Off-shoulder summer dress','Ribbed tank and linen shorts','Vacation shirt dress','Poolside matching set'
+ ],
+ street:[
+ 'Oversized hoodie and cargo pants','Graphic tee and baggy jeans','Cargo trousers and fitted tee','Bomber jacket and straight-leg jeans','Denim jacket and mini skirt','Baggy jeans and crop top','Utility jumpsuit','Track jacket and joggers','Oversized shirt and biker shorts','Layered streetwear co-ord','Wide-leg cargo pants and tank','Varsity jacket and jeans','Relaxed tee and cargo skirt','Denim-on-denim outfit','Skater skirt and oversized tee'
+ ],
+ active:[
+ 'Matching leggings and sports bra','Athletic tank and running shorts','Zip-up jacket and leggings','Yoga set','Pilates matching set','Sports tee and joggers','Tennis skirt and polo top','Running jacket and shorts','Seamless activewear co-ord','Bike shorts and oversized tee','Training leggings and crop top','Warm-up tracksuit'
+ ],
+ casual:[
+ 'Chic fitted pink outfit with delicate straps','Cotton summer dress','Slip dress with cardigan','Fitted top and jeans','Wide-leg jeans and shirt','Linen trousers and tank','Pleated skirt and knit top','Shorts and linen shirt','Knit sweater and skirt','Cardigan and midi skirt','Relaxed button-down and jeans','Tank top and tailored shorts','Casual shirt dress','Ribbed top and wide-leg trousers','Soft knit co-ord set','Everyday denim and blouse','Simple tee and straight-leg jeans','Lightweight sweater and trousers'
+ ],
+ vintage:[
+ 'Vintage tea-length dress','1950s fit-and-flare dress','1970s flared jeans and blouse','Vintage floral midi dress','Retro mini dress','Classic pencil skirt and blouse','High-waisted trousers and tucked blouse','Peter Pan collar dress','Pleated vintage skirt and cardigan','Vintage-inspired shirt dress'
+ ],
+ romantic:[
+ 'Soft floral midi dress','Lace-trim slip dress','Chiffon maxi dress','Ruffle-sleeve mini dress','Flowing wrap dress','Off-shoulder midi dress','Puff-sleeve sundress','Pleated skirt and delicate blouse','Satin slip gown','Soft draped co-ord set'
+ ],
+ minimalist:[
+ 'Minimalist midi dress','Clean-cut maxi dress','Monochrome trouser set','Fine-knit top and tailored trousers','Straight-leg jeans and plain tee','Sleeveless column dress','Simple shirt dress','Structured co-ord set','Neutral linen set','Understated blazer and trousers'
+ ]
+};
+function outfitGroupForStyle(style){
+ if(style==='Indian traditional'||style==='Festive ethnic'||style==='Wedding guest')return 'indian';
+ if(style==='Indian fusion / Indo-western')return 'fusion';
+ if(style==='Formal / tailored'||style==='Quiet luxury'||style==='Preppy')return 'formal';
+ if(style==='Resort wear')return 'resort';
+ if(style==='Streetwear')return 'street';
+ if(style==='Activewear')return 'active';
+ if(style==='Romantic'||style==='Bohemian')return 'romantic';
+ if(style==='Vintage')return 'vintage';
+ if(style==='Western chic')return 'western';
+ if(style==='Minimalist')return 'minimalist';
+ if(style==='Art-inspired')return 'party';
+ return 'casual';
+}
+function refreshOutfitOptions(keepCurrent){
+ const style=$('style'),outfit=$('outfit');if(!style||!outfit)return;
+ const current=outfit.value,group=outfitGroupForStyle(style.value);
+ const custom=getCustomLibrary(),items=[...new Set([...(outfitGroups[group]||outfitGroups.casual),...(custom.outfit||[])])];
+ // Keep a current/custom recipe value available rather than silently losing saved work.
+ if(keepCurrent&&current&&!items.includes(current))items.unshift(current);
+ outfit.innerHTML='';
+ items.forEach(value=>outfit.add(new Option(value,value)));
+ outfit.add(new Option('＋ Enter a custom option…','__custom__'));
+ if(items.includes(current))outfit.value=current;
+ else outfit.value=items[0]||'';
+}
+$('style').addEventListener('change',()=>{refreshOutfitOptions(false);build();});
+refreshOutfitOptions(true);
+
 const HOME_DNA_IDS=['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','details','lock'];
 const HOME_OUTFIT_IDS=['style','outfit','fit','neck','fabric','colors','pattern','jewelry','outfitNotes'];
 const SCENE_IDS=['location','weather','pose','expression','framing','capture','camera','lighting','sceneNotes','realism','detailLevel','negative','extra'];
