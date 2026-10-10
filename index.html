@@ -245,8 +245,6 @@ function addCustomToSelects(){
   sel.addEventListener('change',()=>{row.hidden=sel.value!=='__custom__';if(!row.hidden)inp.focus();else build()});btn.addEventListener('click',apply);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply()}});
  });
 }
-addCustomToSelects();
-
 renderLibrary();
 
 // Character DNA protection: prevent accidental edits to permanent identity fields.
@@ -256,6 +254,8 @@ function syncDNAProtection(){const locked=$('protectDNA').checked;protectedDNAFi
 $('protectDNA').addEventListener('change',()=>{syncDNAProtection();toast($('protectDNA').checked?'Character DNA protected':'DNA unlocked for intentional editing')});
 syncDNAProtection();
 
+
+addCustomToSelects();
 
 const HOME_DNA_IDS=['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','details','lock'];
 const HOME_OUTFIT_IDS=['style','outfit','fit','neck','fabric','colors','pattern','jewelry','outfitNotes'];
