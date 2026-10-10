@@ -17,6 +17,31 @@
 .recipeApply{font-size:11px;color:var(--accent);margin-top:9px;display:block;font-weight:700}
 @media(max-width:650px){.recipeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.recipeTop{align-items:flex-start;flex-direction:column}.recipeWrap{padding:14px}}
 @media(max-width:380px){.recipeGrid{grid-template-columns:1fr}.recipeCard{min-height:auto}}
+
+/* Refined compact typography, touch targets, and small-screen layout */
+body{font-size:13px;line-height:1.48}
+header{padding:13px clamp(12px,3vw,30px)}
+.logo{width:34px;height:34px;border-radius:11px;font-size:17px}
+.brand{gap:9px}.brand h1{font-size:16px}.brand small{font-size:9px}
+.tag{font-size:10px;padding:4px 8px}
+.wrap{max-width:1180px;padding:22px clamp(11px,2.2vw,25px) 38px}
+.hero{gap:14px;margin-bottom:17px}.hero h2{font-size:clamp(25px,3.8vw,40px);margin:7px 0 10px}.hero p{font-size:12px}
+.eyebrow{font-size:9px;letter-spacing:.16em}
+.heroNote{font-size:11px;padding:13px}
+.layout{gap:14px;grid-template-columns:minmax(0,1.05fr) minmax(290px,.95fr)}
+.panel{border-radius:15px}.panelHead{padding:13px 15px}.panelHead h3{font-size:14px}.panelBody{padding:14px}
+.section{border-radius:11px;margin-bottom:9px}.section summary{padding:11px 12px;font-size:12px}.sectionInner{padding:12px;gap:10px}
+label{font-size:10px}input,select,textarea{font-size:12px;padding:8px 9px;border-radius:8px;min-height:35px}
+textarea{min-height:70px}.hint,.notice{font-size:10px}.btn{font-size:11px;padding:8px 10px;border-radius:8px}.btn.small{font-size:10px;padding:6px 8px}
+.output{top:78px}.outputArea{font-size:11px;min-height:260px;padding:12px}.quality{font-size:10px;padding:10px}.stat,.pill{font-size:9px}
+.recipeWrap{padding:14px;margin-bottom:16px;border-radius:15px}.recipeTop h3{font-size:16px}.recipeTop p{font-size:11px}.recipeGrid{gap:8px}.recipeCard{padding:11px;min-height:108px}.recipeCard strong{font-size:11px}.recipeCard span:last-child{font-size:10px}.recipeIcon{font-size:18px}
+.dropdownField{display:flex;flex-direction:column;gap:5px;min-width:0}
+.customChoice{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;align-items:center}
+.customChoice input{min-width:0;min-height:31px;font-size:11px;padding:6px 8px}
+.customChoice button{padding:6px 8px;white-space:nowrap}
+@media(max-width:850px){.hero,.layout{grid-template-columns:1fr}.output{position:static;order:2}.heroNote{display:none}.layout>.panel{order:1}}
+@media(max-width:600px){body{font-size:12px}.wrap{padding:15px 10px 28px}.hero h2{font-size:29px}.panelHead{padding:11px}.panelBody{padding:10px}.sectionInner{grid-template-columns:1fr;gap:9px;padding:10px}.field.full{grid-column:auto}.section summary{font-size:11px}.recipeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.recipeCard{min-height:102px;padding:10px}.outputArea{min-height:220px;font-size:11px}.btn{min-height:34px}.brand small{letter-spacing:.08em}}
+@media(max-width:360px){.recipeGrid{grid-template-columns:1fr}.recipeTop{gap:6px}.btns{gap:5px}.tag{display:none}}
 </style></head>
 <body>
 <header><div class="brand"><div class="logo">N</div><div><h1>NOIR MUSE</h1><small>Character & photo prompt studio</small></div></div><span class="tag">PRIVATE · SAVED IN THIS BROWSER</span></header>
@@ -168,6 +193,30 @@ document.querySelectorAll('[data-recipe]').forEach(btn=>btn.addEventListener('cl
  $('output').scrollIntoView({behavior:'smooth',block:'nearest'});
  toast('Scene recipe applied — character DNA preserved');
 }));
+
+
+// Turn free-text detail fields into real dropdowns, while retaining a custom-value path.
+const dropdownCategories={ethnicity:'ethnicity',nationality:'nationality',skin:'skin',eyes:'eyes',nose:'nose',lips:'lips',brows:'brows',hair:'hair',body:'body',details:'details',outfit:'outfit',neck:'neck',fabric:'fabric',colors:'colors',pattern:'pattern',jewelry:'jewelry',outfitNotes:'outfitNotes',location:'location',sceneNotes:'sceneNotes'};
+function makeDetailDropdowns(){
+ Object.entries(dropdownCategories).forEach(([id,cat])=>{
+  const old=$(id);if(!old||old.tagName!=='INPUT')return;
+  const current=old.value, custom=getCustomLibrary(), built=optionLibrary[cat]||[];
+  const select=document.createElement('select');select.id=id;select.className=old.className;select.setAttribute('aria-label',old.getAttribute('aria-label')||id);
+  const options=[...new Set([current,...built,...(custom[cat]||[])].filter(Boolean))];
+  options.forEach(value=>select.add(new Option(value,value)));
+  const customOption=new Option('＋ Enter a custom option…','__custom__');select.add(customOption);
+  select.value=options.includes(current)?current:'__custom__';
+  const shell=document.createElement('div');shell.className='dropdownField';
+  const customRow=document.createElement('div');customRow.className='customChoice';customRow.hidden=true;
+  const customInput=document.createElement('input');customInput.type='text';customInput.placeholder='Type a custom value…';customInput.setAttribute('aria-label','Custom '+id);
+  const apply=document.createElement('button');apply.type='button';apply.className='btn small';apply.textContent='Use';
+  customRow.append(customInput,apply);shell.append(select,customRow);old.replaceWith(shell);
+  const applyCustom=()=>{const value=customInput.value.trim();if(!value)return;let opt=[...select.options].find(o=>o.value===value);if(!opt){opt=new Option(value,value);select.insertBefore(opt,select.options[select.options.length-1]);}select.value=value;customRow.hidden=true;customInput.value='';const data=getCustomLibrary();data[cat]=[...new Set([...(data[cat]||[]),value])];try{localStorage.setItem('noirMuseCustomOptions',JSON.stringify(data))}catch(e){}build();};
+  select.addEventListener('change',()=>{if(select.value==='__custom__'){customRow.hidden=false;customInput.focus()}else{customRow.hidden=true;build()}});
+  apply.addEventListener('click',applyCustom);customInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();applyCustom()}});
+ });
+}
+makeDetailDropdowns();
 
 renderLibrary();
 
