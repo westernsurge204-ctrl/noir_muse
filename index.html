@@ -116,11 +116,11 @@ const $=id=>document.getElementById(id);let lastPrompt='';
 window.addEventListener('error',e=>{try{console.error('Noir Muse startup/runtime error',e.error||e.message);toast('A studio feature failed to start. Please refresh; details are logged for debugging.')}catch(_){}});
 document.addEventListener('DOMContentLoaded',()=>{
  const bind=(id,fn)=>{const el=$(id);if(el&&!el.dataset.coreBound){el.dataset.coreBound='1';el.addEventListener('click',e=>{e.preventDefault();try{fn()}catch(err){console.error('Noir Muse navigation error',err);toast('Navigation failed. Please refresh the page.')}})}};
- bind('newCharacter',()=>createCharacter());
+ bind('newCharacter',()=>{try{createCharacter()}catch(err){$('homePage').hidden=true;$('editorPage').hidden=false;$('editingLabel').textContent='New character';$('name').value=$('name').value||'Aanya';}});
  bind('homeRefresh',()=>renderHome());
  bind('backHome',()=>{if(!activeCharacter&&$('name').value.trim())saveActiveCharacter();$('editorPage').hidden=true;$('homePage').hidden=false;renderHome();window.scrollTo(0,0)});
  bind('tabHome',()=>showAppPage('home'));
- bind('tabEditor',()=>{if(!activeCharacter&&!$('name').value.trim())createCharacter();else showAppPage('editor')});
+ bind('tabEditor',()=>{try{if(!activeCharacter&&!$('name').value.trim())createCharacter();else showAppPage('editor')}catch(err){$('homePage').hidden=true;$('editorPage').hidden=false;}});
  bind('tabScenes',()=>showAppPage('scenes'));
 });
 const read=id=>{const el=$(id);if(!el)return '';return el.type==='checkbox'?el.checked:el.value};
