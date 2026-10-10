@@ -135,4 +135,5 @@ const protectedDNAFields=['name','age','ethnicity','nationality','face','skin','
 function syncDNAProtection(){const locked=$('protectDNA').checked;protectedDNAFields.forEach(id=>{const el=$(id);if(el){el.disabled=locked;el.setAttribute('aria-disabled',String(locked));}});$('protectDNA').setAttribute('aria-checked',String(locked));}
 $('protectDNA').addEventListener('change',()=>{syncDNAProtection();toast($('protectDNA').checked?'Character DNA protected':'DNA unlocked for intentional editing')});
 syncDNAProtection();
-\n</script></body></html>
+
+</script></body></html>
