@@ -112,7 +112,7 @@ textarea{min-height:70px}.hint,.notice{font-size:10px}.btn{font-size:11px;paddin
 <script>
 const ids=['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','bust','waist','hips','shoulders','physique','details','lock','style','outfit','fit','neck','fabric','colors','pattern','jewelry','outfitNotes','country','region','location','weather','pose','expression','framing','capture','camera','lighting','sceneNotes','realism','detailLevel','promptMode','changeOnly','negative','extra'];
 const $=id=>document.getElementById(id);let lastPrompt='';
-const read=id=>$(id).type==='checkbox'?$(id).checked:$(id).value;
+const read=id=>{const el=$(id);if(!el)return '';return el.type==='checkbox'?el.checked:el.value};
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2100)}
 function build(){
 const v=Object.fromEntries(ids.map(id=>[id,read(id)]));
@@ -120,7 +120,7 @@ const clean=s=>String(s||'').replace(/\\s+/g,' ').trim();
 const sentence=s=>{s=clean(s);return s?(/[.!?]$/.test(s)?s:s+'.'):''};
 const identity='IDENTITY — '+v.name+', an adult '+v.age+'; '+v.ethnicity+' heritage, '+v.nationality+' nationality. Preserve a consistent, recognizable identity throughout the image. Face: '+v.face+' face with softly defined natural features. Skin: '+v.skin+', with realistic natural variation. Eyes: '+v.eyes+'. Nose: '+v.nose+'. Lips: '+v.lips+'. Eyebrows: '+v.brows+'. Hair: '+v.hair+'. Body: '+v.body+'.'+(v.details?' Distinctive details: '+sentence(v.details):'');
 const bodyBits=[['Bust / chest',v.bust],['Waist',v.waist],['Hips',v.hips],['Shoulders',v.shoulders],['Overall physique',v.physique]].filter(x=>clean(x[1]));
-const bustText=clean(v.bust);const body='BODY PROPORTIONS — IMPORTANT PRIORITY\\n'+(bodyBits.length?bodyBits.map(x=>x[0]+': '+sentence(x[1])).join(' '):'Maintain the selected body build.')+(bustText?' BUST SIZE PRIORITY — '+sentence(bustText)+' Make this chest/bust visibly match the specified size, clearly fuller than a small or modest bust when a full-bust option is selected. Preserve realistic anatomy, natural weight and gravity, and believable support. Do not minimize, flatten, reduce, or downsize the bust; do not let a generic slim or petite body description override the explicit bust specification.':'')+' Maintain realistic anatomy, natural weight and gravity, believable contours, and balanced proportions. Change only the body areas explicitly specified; do not reshape unrelated areas.';
+const bustText=clean(v.bust);const body='BODY PROPORTIONS — IMPORTANT PRIORITY\\n'+(bodyBits.length?bodyBits.map(x=>x[0]+': '+sentence(x[1])).join(' '):'Maintain the selected body build.')+(bustText?' BUST SIZE PRIORITY — '+sentence(bustText)+' The explicit bust selection overrides generic petite/slim body wording. Render the bust visibly at the selected size and clearly fuller than a small or modest bust when a full-bust option is selected; do not reduce or flatten it. Preserve realistic anatomy, natural weight and gravity, and believable support. Do not minimize, flatten, reduce, or downsize the bust; do not let a generic slim or petite body description override the explicit bust specification.':'')+' Maintain realistic anatomy, natural weight and gravity, believable contours, and balanced proportions. Change only the body areas explicitly specified; do not reshape unrelated areas.';
 const swim=/bikini|swimwear|swim suit|two-piece/i.test(v.style+' '+v.outfit);
 const outfit='OUTFIT — '+v.style+': '+v.outfit+'. Silhouette and fit: '+v.fit+'. Neckline / straps / sleeves: '+v.neck+'. Fabric and finish: '+v.fabric+'. Colours: '+v.colors+'. Pattern and details: '+v.pattern+'. Accessories: '+v.jewelry+'.'+(v.outfitNotes?' Additional outfit notes: '+sentence(v.outfitNotes):'');
 const garmentFit=swim?'BIKINI FIT AND CONSTRUCTION — Keep the selected bikini design, cut, colours, and minimal aesthetic consistent. Make the top shape, cup proportions, strap placement, bottom cut, side ties, and coverage clearly legible. Use opaque fabric, realistic seams, natural tension, believable support, and physically plausible fit. Do not replace the selected style with a generic swimsuit.':(/saree|lehenga|anarkali|kurta|salwar|sharara/i.test(v.outfit)?'GARMENT CONSTRUCTION AND FIT — Preserve the selected garment construction, drape, seams, pleats, borders, embroidery, and layering. Keep fabric weight and movement physically plausible.':'GARMENT CONSTRUCTION AND FIT — Make the selected neckline, sleeves, silhouette, length, fabric, and layers clearly visible. Use realistic seams, natural folds, believable fabric tension, and a plausible fit.');
@@ -140,17 +140,13 @@ $('quality').innerHTML='<strong>Quality check</strong><br>'+(checks.length?check
 }
 $('generate').onclick=build;$('regen').onclick=build;
 $('copy').type='button';
-$('copy').onclick=async e=>{
- if(e)e.preventDefault();
- const prompt=lastPrompt||build();
- try{
-  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(prompt);toast('Prompt copied to clipboard');return}
- }catch(err){}
- try{
-  const area=document.createElement('textarea');area.value=prompt;area.setAttribute('aria-label','Prompt to copy');area.style.position='fixed';area.style.left='8px';area.style.top='8px';area.style.width='calc(100% - 16px)';area.style.height='180px';area.style.zIndex='99999';area.style.background='#fff';area.style.color='#111';area.style.padding='12px';area.style.opacity='1';document.body.appendChild(area);area.focus();area.select();area.setSelectionRange(0,area.value.length);
-  const ok=document.execCommand('copy');if(ok){area.remove();toast('Prompt copied to clipboard')}else{toast('Prompt selected below — tap Copy in the selection menu');area.scrollIntoView({block:'center'})}
- }catch(err){toast('Copy unavailable — select the prompt text and choose Copy')}
-};
+$('copy').addEventListener('click',async e=>{
+ e.preventDefault();e.stopImmediatePropagation();
+ const prompt=build();const btn=$('copy');btn.textContent='Copying…';
+ try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(prompt);toast('Copied prompt to clipboard');btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy prompt',1800);return}}catch(err){}
+ const out=$('output');out.textContent=prompt;const range=document.createRange();range.selectNodeContents(out);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+ try{if(document.execCommand('copy')){toast('Copied prompt to clipboard');btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy prompt',1800)}else toast('Prompt selected — tap and hold, then choose Copy')}catch(err){toast('Prompt selected — tap and hold, then choose Copy')}
+},true);
 $('download').onclick=()=>{if(!lastPrompt)build();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lastPrompt],{type:'text/plain'}));a.download='noir-muse-prompt.txt';a.click();URL.revokeObjectURL(a.href)};
 $('saveDNA').type='button';$('saveDNA').onclick=e=>{if(e)e.preventDefault();try{const d={};['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','bust','waist','hips','shoulders','physique','details','lock'].forEach(id=>d[id]=read(id));localStorage.setItem('noirMuseDNA',JSON.stringify(d));toast('Character DNA saved on this device')}catch(err){toast('Could not save DNA — browser storage may be blocked or full')}};
 $('loadDNA').onclick=()=>{try{const d=JSON.parse(localStorage.getItem('noirMuseDNA')||'null');if(!d){toast('No saved DNA in this browser yet');return}Object.keys(d).forEach(id=>{if($(id)){if($(id).type==='checkbox')$(id).checked=d[id];else $(id).value=d[id]}});toast('Character DNA loaded')}catch(e){toast('Could not load saved DNA')}};
@@ -466,21 +462,26 @@ let activeCharacter='';
 function createCharacter(){activeCharacter='';$('homePage').hidden=true;$('editorPage').hidden=false;$('editingLabel').textContent='New character';$('profileName').value='';$('name').value='';['age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','details'].forEach(id=>{const el=$(id);if(el)el.disabled=false});$('protectDNA').checked=false;syncDNAProtection();renderScenes();window.scrollTo(0,0)}
 function openCharacter(name){const p=storeObj(PROFILE_KEY)[name];if(!p)return;activeCharacter=name;$('homePage').hidden=true;$('editorPage').hidden=false;$('editingLabel').textContent='Editing · '+name;$('profileName').value=name;applyFields(p.dna);applyFields(p.outfit);if(p.scene)applyFields(p.scene);$('protectDNA').checked=true;syncDNAProtection();renderScenes();build();window.scrollTo(0,0)}
 function saveActiveCharacter(){
- const name=($('profileName').value.trim()||$('name').value.trim()||'Untitled character');
+ const name=(String(read('profileName')||'').trim()||String(read('name')||'').trim()||'Untitled character');
  try{
   const profiles=storeObj(PROFILE_KEY);
   profiles[name]={dna:fields(HOME_DNA_IDS),outfit:fields(HOME_OUTFIT_IDS),scene:fields(SCENE_IDS)};
   localStorage.setItem(PROFILE_KEY,JSON.stringify(profiles));
   const check=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}');
-  if(!check[name])throw new Error('Save verification failed');
+  if(!check[name]||!check[name].dna||!check[name].scene)throw new Error('Browser did not retain saved character');
   activeCharacter=name;$('profileName').value=name;$('editingLabel').textContent='Editing · '+name;
-  refreshSelect('profileList',PROFILE_KEY);$('profileList').value=name;renderHome();toast('Character saved on this device');return name;
- }catch(err){console.error('Noir Muse character save failed',err);toast('Could not save — browser storage may be blocked or full');return '';}
+  refreshSelect('profileList',PROFILE_KEY);$('profileList').value=name;renderHome();toast('Saved character: '+name);return name;
+ }catch(err){
+  console.error('Noir Muse save error',err);
+  try{const backup={name,dna:fields(HOME_DNA_IDS),outfit:fields(HOME_OUTFIT_IDS),scene:fields(SCENE_IDS)};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));a.download='noir-muse-'+name.replace(/[^a-z0-9_-]+/gi,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Browser storage failed — character backup downloaded')}
+  catch(e){toast('Save failed: browser storage is blocked. Open site in Safari, not an embedded preview.')}
+  return '';
+ }
 }
 function renderScenes(){const list=$('sceneList');if(!list)return;list.innerHTML='';const data=storeObj(SCENE_KEY)[activeCharacter]||{};Object.keys(data).forEach(name=>{const b=document.createElement('button');b.className='sceneChip';b.textContent=name;b.onclick=()=>{applyFields(data[name]);$('sceneName').value=name;build();toast('Scene loaded')};list.append(b)});if(!Object.keys(data).length){const span=document.createElement('span');span.className='hint';span.textContent='Save different moments here; each belongs to this character.';list.append(span)}}
 function saveScene(){if(!activeCharacter)activeCharacter=saveActiveCharacter();else saveActiveCharacter();const name=$('sceneName').value.trim();if(!name){toast('Name this scene first');return}const all=storeObj(SCENE_KEY);all[activeCharacter]=all[activeCharacter]||{};all[activeCharacter][name]=fields(SCENE_IDS);localStorage.setItem(SCENE_KEY,JSON.stringify(all));renderScenes();renderHome();toast('Scene saved for '+activeCharacter)}
 $('newCharacter').addEventListener('click',createCharacter);$('homeRefresh').addEventListener('click',renderHome);$('backHome').addEventListener('click',()=>{if(!activeCharacter&&$('name').value.trim())saveActiveCharacter();$('editorPage').hidden=true;$('homePage').hidden=false;renderHome();window.scrollTo(0,0)});
-$('saveProfile').type='button';$('saveProfile').onclick=e=>{if(e)e.preventDefault();const n=saveActiveCharacter();if(n){$('profileList').value=n;renderScenes()}};
+$('saveProfile').type='button';$('saveProfile').addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();const n=saveActiveCharacter();if(n){$('profileList').value=n;renderScenes()}},true);
 $('loadProfile').addEventListener('click',()=>{const n=$('profileList').value;if(n)openCharacter(n)});
 $('saveScene').type='button';$('saveScene').addEventListener('click',e=>{e.preventDefault();saveScene()});
 renderHome();
