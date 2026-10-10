@@ -112,6 +112,17 @@ textarea{min-height:70px}.hint,.notice{font-size:10px}.btn{font-size:11px;paddin
 <script>
 const ids=['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','bust','waist','hips','shoulders','physique','details','lock','style','outfit','fit','neck','fabric','colors','pattern','jewelry','makeup','footwear','outfitNotes','country','region','location','weather','pose','expression','framing','capture','camera','lighting','sceneNotes','realism','detailLevel','promptMode','changeOnly','negative','extra'];
 const $=id=>document.getElementById(id);let lastPrompt='';
+// Keep core navigation responsive even if a later optional initializer fails.
+window.addEventListener('error',e=>{try{console.error('Noir Muse startup/runtime error',e.error||e.message);toast('A studio feature failed to start. Please refresh; details are logged for debugging.')}catch(_){}});
+document.addEventListener('DOMContentLoaded',()=>{
+ const bind=(id,fn)=>{const el=$(id);if(el&&!el.dataset.coreBound){el.dataset.coreBound='1';el.addEventListener('click',e=>{e.preventDefault();try{fn()}catch(err){console.error('Noir Muse navigation error',err);toast('Navigation failed. Please refresh the page.')}})}};
+ bind('newCharacter',()=>createCharacter());
+ bind('homeRefresh',()=>renderHome());
+ bind('backHome',()=>{if(!activeCharacter&&$('name').value.trim())saveActiveCharacter();$('editorPage').hidden=true;$('homePage').hidden=false;renderHome();window.scrollTo(0,0)});
+ bind('tabHome',()=>showAppPage('home'));
+ bind('tabEditor',()=>{if(!activeCharacter&&!$('name').value.trim())createCharacter();else showAppPage('editor')});
+ bind('tabScenes',()=>showAppPage('scenes'));
+});
 const read=id=>{const el=$(id);if(!el)return '';return el.type==='checkbox'?el.checked:el.value};
 function toast(s){const el=$('toast');if(!el)return;el.textContent=s;el.classList.remove('toastError','toastSuccess');if(/saved|copied|loaded|applied|created|preserved/i.test(s))el.classList.add('toastSuccess');else if(/failed|could not|blocked|error|did not complete/i.test(s))el.classList.add('toastError');el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.style.display='block';clearTimeout(window.__noirToastTimer);window.__noirToastTimer=setTimeout(()=>{el.style.display='none'},3200)}
 function build(){
@@ -483,7 +494,7 @@ function saveActiveCharacter(){
 }
 function renderScenes(){const list=$('sceneList');if(!list)return;list.innerHTML='';const data=storeObj(SCENE_KEY)[activeCharacter]||{};Object.keys(data).forEach(name=>{const b=document.createElement('button');b.className='sceneChip';b.textContent=name;b.onclick=()=>{applyFields(data[name]);$('sceneName').value=name;build();toast('Scene loaded')};list.append(b)});if(!Object.keys(data).length){const span=document.createElement('span');span.className='hint';span.textContent='Save different moments here; each belongs to this character.';list.append(span)}}
 function saveScene(){if(!activeCharacter)activeCharacter=saveActiveCharacter();else saveActiveCharacter();const name=$('sceneName').value.trim();if(!name){toast('Name this scene first');return}const all=storeObj(SCENE_KEY);all[activeCharacter]=all[activeCharacter]||{};all[activeCharacter][name]=fields(SCENE_IDS);localStorage.setItem(SCENE_KEY,JSON.stringify(all));renderScenes();renderHome();toast('Scene saved for '+activeCharacter)}
-$('newCharacter').addEventListener('click',createCharacter);$('homeRefresh').addEventListener('click',renderHome);$('backHome').addEventListener('click',()=>{if(!activeCharacter&&$('name').value.trim())saveActiveCharacter();$('editorPage').hidden=true;$('homePage').hidden=false;renderHome();window.scrollTo(0,0)});
+
 $('saveProfile').type='button';$('saveProfile').addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();const btn=$('saveProfile');const oldLabel=btn.textContent;btn.disabled=true;btn.textContent='Saving…';try{const n=saveActiveCharacter();if(n){$('profileList').value=n;renderScenes();toast('Character saved: '+n+' — stored in this browser')}else{toast('Save did not complete. Check browser storage settings.')}}catch(err){console.error('Noir Muse save handler error',err);toast('Save failed — browser storage may be blocked or full')}finally{btn.disabled=false;btn.textContent=oldLabel}},true);
 $('loadProfile').addEventListener('click',()=>{const n=$('profileList').value;if(n)openCharacter(n)});
 $('saveScene').type='button';$('saveScene').addEventListener('click',e=>{e.preventDefault();saveScene()});
@@ -503,9 +514,9 @@ function showAppPage(page){
   setTimeout(()=>{const shelf=document.querySelector('.sceneShelf');if(shelf)shelf.scrollIntoView({behavior:'smooth',block:'start'});},80);
  }else window.scrollTo({top:0,behavior:'smooth'});
 }
-$('tabHome').addEventListener('click',()=>showAppPage('home'));
-$('tabEditor').addEventListener('click',()=>{if(!activeCharacter&&!$('name').value.trim())createCharacter();else showAppPage('editor')});
-$('tabScenes').addEventListener('click',()=>showAppPage('scenes'));
+
+
+
 const previousCreateCharacter=createCharacter;
 createCharacter=function(){previousCreateCharacter();$('tabHome').setAttribute('aria-current','false');$('tabEditor').setAttribute('aria-current','page');$('tabScenes').setAttribute('aria-current','false')};
 const previousOpenCharacter=openCharacter;
