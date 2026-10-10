@@ -369,8 +369,8 @@ function refreshStyleDetails(keepCurrent){
  ['neck','fabric','pattern','jewelry','outfitNotes'].forEach(id=>{
   const el=$(id);if(!el||el.tagName!=='SELECT')return;
   const current=el.value,values=[...(data[id]||[])];
-  if(id==='outfitNotes'&&key==='indian')values.push(...(data.outfitNotes||[]));
-  const items=[...new Set([...(keepCurrent&&current?[current]:[]),...values,...(custom[id]||[])])];
+  if(id==='outfitNotes'&&!values.length)values.push(...(optionLibrary.outfitNotes||[]));
+  const items=[...new Set([...(keepCurrent&&current&&current!=='__custom__'?[current]:[]),...values,...(custom[id]||[])])];
   el.innerHTML='';items.forEach(v=>el.add(new Option(v,v)));
   el.add(new Option('＋ Enter a custom option…','__custom__'));
   if(items.includes(current))el.value=current;else el.value=items[0]||'';
