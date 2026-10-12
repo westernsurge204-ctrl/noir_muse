@@ -176,7 +176,7 @@ $('surprise').onclick=()=>{const pools={style:['Contemporary casual','Indian tra
 
 const variationPools={
 pose:['On hands and knees on a bed, looking toward camera','Sitting back on heels, hands resting on thighs','Lying on stomach, chin resting on hands','Side-lying on a bed, head supported by one arm','Standing with a gentle hip shift and one knee bent','Looking back over shoulder with relaxed posture','Seated at the edge of a bed, feet on the floor','Low crouch with balanced posture'],
-hair:['Long wavy black hair, middle part','Long straight black hair, middle part','Low ponytail with loose face-framing strands','Half-up, half-down hairstyle','Loose natural curls'],
+hair:['Gentle breeze moving a few loose strands','Wind-swept movement with believable direction','Hair caught mid-turn with natural motion','Loose strands framing the face','Hair lifted lightly while adjusting hairstyle','Still hairstyle, no wind or motion'],
 lighting:['Window light, gentle contrast','Golden-hour late afternoon','Warm indoor evening light','Moody practical lamps','Available natural light, believable soft shadows','Professional softbox lighting'],
 outfit:['Satin evening gown','Slip dress with cardigan','Resort co-ord set','Fitted top and jeans','Cotton summer dress','Linen trousers and tank','Lace-trimmed satin lounge set','Chiffon dress with fluid drape'],
 expression:['Soft pout with relaxed eyes','Playful, relaxed expression','Subtle smirk, playful confidence','One-eye wink with a cheeky smile','Dreamy, distant gaze','Confident editorial gaze','Soft natural smile'],
@@ -187,7 +187,7 @@ function createVariations(){
  const enabled={pose:$('varyPose').checked,hair:$('varyHair').checked,lighting:$('varyLighting').checked,outfit:$('varyOutfit').checked,expression:$('varyExpression').checked,scene:$('varyScene').checked};
  if($('keepOutfit').checked)enabled.outfit=false;
  if($('keepScene').checked)enabled.scene=false;
- if($('keepDNA').checked)enabled.hair=false;
+ // Hair variations affect movement/detail only; the character's base hair identity stays fixed.
  const active=Object.keys(enabled).filter(k=>enabled[k]);
  if(!active.length){toast('Choose at least one category to vary, or uncheck a fixed setting');return}
  const snapshot={};ids.forEach(id=>{const el=$(id);if(el)snapshot[id]=el.type==='checkbox'?el.checked:el.value});
@@ -197,9 +197,9 @@ function createVariations(){
    active.forEach(key=>{
     const pool=variationPools[key]||[];
     if(!pool.length)return;
-    const current=snapshot[key==='scene'?'location':key==='hair'?'hair':key==='pose'?'pose':key==='lighting'?'lighting':key==='outfit'?'outfit':'expression'];
+    const current=snapshot[key==='scene'?'location':key==='hair'?'hairMovement':key==='pose'?'pose':key==='lighting'?'lighting':key==='outfit'?'outfit':'expression'];
     const options=pool.filter(x=>x!==current);
-    if(options.length){const pick=options[(i+Math.floor(Math.random()*options.length))%options.length];const field=key==='scene'?'location':key;$(field).value=pick;}
+    if(options.length){const pick=options[(i+Math.floor(Math.random()*options.length))%options.length];const field=key==='scene'?'location':key==='hair'?'hairMovement':key;$(field).value=pick;}
    });
    const prompt=build();
    results.push({title:'Variation '+(i+1),prompt});
