@@ -132,13 +132,54 @@ const ids=['name','age','ethnicity','nationality','face','skin','eyes','nose','l
 const $=id=>document.getElementById(id);let lastPrompt='';
 const read=id=>{const el=$(id);if(!el)return '';return el.type==='checkbox'?el.checked:el.value};
 function toast(s){const el=$('toast');if(!el)return;el.textContent=s;el.classList.remove('toastError','toastSuccess');if(/saved|copied|loaded|applied|created|preserved/i.test(s))el.classList.add('toastSuccess');else if(/failed|could not|blocked|error|did not complete/i.test(s))el.classList.add('toastError');el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.style.display='block';clearTimeout(window.__noirToastTimer);window.__noirToastTimer=setTimeout(()=>{el.style.display='none'},3200)}
+async function copyTextReliable(text,button,label){
+ const original=label||'Copy prompt';
+ if(button){button.disabled=true;button.textContent='Copying…';}
+ let copied=false;
+ try{
+  if(navigator.clipboard&&window.isSecureContext){
+   await navigator.clipboard.writeText(text);
+   copied=true;
+  }
+ }catch(err){}
+ if(!copied){
+  let area=null;
+  try{
+   area=document.createElement('textarea');
+   area.value=text;
+   area.setAttribute('readonly','');
+   area.setAttribute('aria-label','Prompt text ready to copy');
+   area.style.position='fixed';
+   area.style.top='0';
+   area.style.left='0';
+   area.style.width='1px';
+   area.style.height='1px';
+   area.style.padding='0';
+   area.style.opacity='0.01';
+   area.style.fontSize='16px';
+   document.body.appendChild(area);
+   area.focus({preventScroll:true});
+   area.select();
+   area.setSelectionRange(0,area.value.length);
+   copied=!!(document.execCommand&&document.execCommand('copy'));
+  }catch(err){}
+  finally{if(area&&area.parentNode)area.parentNode.removeChild(area);}
+ }
+ if(button){button.disabled=false;button.textContent=copied?'Copied ✓':original;}
+ if(copied){toast('Copied prompt to clipboard');if(button)setTimeout(()=>{button.textContent=original},1800);return true;}
+ toast('Copy was blocked — prompt text is ready to select and copy');
+ const out=$('output');
+ if(out){out.textContent=text;out.setAttribute('tabindex','0');try{out.focus({preventScroll:true});const range=document.createRange();range.selectNodeContents(out);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);}catch(err){}}
+ return false;
+}
+
 function build(){
 const v=Object.fromEntries(ids.map(id=>[id,read(id)]));
-const clean=s=>String(s||'').replace(/\\s+/g,' ').trim();
+const clean=s=>String(s||'').replace(/\s+/g,' ').trim();
 const sentence=s=>{s=clean(s);return s?(/[.!?]$/.test(s)?s:s+'.'):''};
 const identity='IDENTITY — '+v.name+', an adult '+v.age+'; '+v.ethnicity+' heritage, '+v.nationality+' nationality. Preserve a consistent, recognizable identity throughout the image. Face: '+v.face+' face with softly defined natural features. Skin: '+v.skin+', with realistic natural variation. Eyes: '+v.eyes+'. Nose: '+v.nose+'. Lips: '+v.lips+'. Eyebrows: '+v.brows+'. Hair: '+v.hair+'. Body: '+v.body+'.'+(v.details?' Distinctive details: '+sentence(v.details):'');
 const bodyBits=[['Bust / chest',v.bust],['Waist',v.waist],['Hips',v.hips],['Shoulders',v.shoulders],['Overall physique',v.physique]].filter(x=>clean(x[1]));
-const bustText=clean(v.bust);const body='BODY PROPORTIONS — IMPORTANT PRIORITY\\n'+(bodyBits.length?bodyBits.map(x=>x[0]+': '+sentence(x[1])).join(' '):'Maintain the selected body build.')+(bustText?' BUST SIZE PRIORITY — '+sentence(bustText)+' The explicit bust selection overrides generic petite/slim body wording. Render the bust visibly at the selected size and clearly fuller than a small or modest bust when a full-bust option is selected; do not reduce or flatten it. Preserve realistic anatomy, natural weight and gravity, and believable support. Do not minimize, flatten, reduce, or downsize the bust; do not let a generic slim or petite body description override the explicit bust specification.':'')+' Maintain realistic anatomy, natural weight and gravity, believable contours, and balanced proportions. Change only the body areas explicitly specified; do not reshape unrelated areas.';
+const bustText=clean(v.bust);const body='BODY PROPORTIONS — IMPORTANT PRIORITY\n'+(bodyBits.length?bodyBits.map(x=>x[0]+': '+sentence(x[1])).join(' '):'Maintain the selected body build.')+(bustText?' BUST SIZE PRIORITY — '+sentence(bustText)+' The explicit bust selection overrides generic petite/slim body wording. Render the bust visibly at the selected size and clearly fuller than a small or modest bust when a full-bust option is selected; do not reduce or flatten it. Preserve realistic anatomy, natural weight and gravity, and believable support. Do not minimize, flatten, reduce, or downsize the bust; do not let a generic slim or petite body description override the explicit bust specification.':'')+' Maintain realistic anatomy, natural weight and gravity, believable contours, and balanced proportions. Change only the body areas explicitly specified; do not reshape unrelated areas.';
 const swim=/bikini|swimwear|swim suit|two-piece/i.test(v.style+' '+v.outfit);
 const outfit='OUTFIT — '+v.style+': '+v.outfit+'. Silhouette and fit: '+v.fit+'. Neckline / straps / sleeves: '+v.neck+'. Fabric and finish: '+v.fabric+'. Colours: '+v.colors+'. Pattern and details: '+v.pattern+'. Accessories: '+v.jewelry+'. Makeup: '+(v.makeup||'not specified')+'. Footwear: '+(v.footwear||'not specified')+'.'+(v.fabricMaterial?' Fabric texture: '+v.fabricMaterial+'.':'')+(v.fabricFit?' Garment fit and construction: '+v.fabricFit+'.':'')+(v.fabricMovement?' Fabric movement: '+v.fabricMovement+'.':'')+(v.outfitNotes?' Additional outfit notes: '+sentence(v.outfitNotes):'');
 const garmentFit=swim?'BIKINI FIT AND CONSTRUCTION — Keep the selected bikini design, cut, colours, and minimal aesthetic consistent. Make the top shape, cup proportions, strap placement, bottom cut, side ties, and coverage clearly legible. Use opaque fabric, realistic seams, natural tension, believable support, and physically plausible fit. Do not replace the selected style with a generic swimsuit.':(/saree|lehenga|anarkali|kurta|salwar|sharara/i.test(v.outfit)?'GARMENT CONSTRUCTION AND FIT — Preserve the selected garment construction, drape, seams, pleats, borders, embroidery, and layering. Keep fabric weight and movement physically plausible.':'GARMENT CONSTRUCTION AND FIT — Make the selected neckline, sleeves, silhouette, length, fabric, and layers clearly visible. Use realistic seams, natural folds, believable fabric tension, and a plausible fit.');
@@ -160,13 +201,8 @@ $('generate').onclick=build;$('regen').onclick=build;
 $('copy').type='button';
 $('copy').addEventListener('click',async e=>{
  e.preventDefault();e.stopImmediatePropagation();
- const prompt=build();const btn=$('copy');const originalLabel='Copy prompt';btn.textContent='Copying…';btn.disabled=true;
- let copied=false;
- try{if(navigator.clipboard&&window.isSecureContext){const result=await Promise.race([navigator.clipboard.writeText(prompt).then(()=>true).catch(()=>false),new Promise(resolve=>setTimeout(()=>resolve(false),1400))]);copied=result===true}}catch(err){}
- if(copied){toast('Copied prompt to clipboard');btn.textContent='Copied ✓';btn.disabled=false;setTimeout(()=>{btn.textContent=originalLabel},1800);return}
- const out=$('output');out.textContent=prompt;
- try{const range=document.createRange();range.selectNodeContents(out);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);if(document.execCommand('copy')){toast('Copied prompt to clipboard');btn.textContent='Copied ✓';setTimeout(()=>{btn.textContent=originalLabel},1800)}else{toast('Prompt ready — tap and hold the text, then choose Copy');btn.textContent=originalLabel}}catch(err){toast('Prompt ready — tap and hold the text, then choose Copy');btn.textContent=originalLabel}
- btn.disabled=false;
+ const prompt=build();
+ await copyTextReliable(prompt,$('copy'),'Copy prompt');
 },true);
 $('download').onclick=()=>{if(!lastPrompt)build();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lastPrompt],{type:'text/plain'}));a.download='noir-muse-prompt.txt';a.click();URL.revokeObjectURL(a.href)};
 $('saveDNA').type='button';$('saveDNA').onclick=e=>{if(e)e.preventDefault();try{const d={};['name','age','ethnicity','nationality','face','skin','eyes','nose','lips','brows','hair','body','bust','waist','hips','shoulders','physique','details','lock'].forEach(id=>d[id]=read(id));localStorage.setItem('noirMuseDNA',JSON.stringify(d));toast('Character DNA saved on this device')}catch(err){toast('Could not save DNA — browser storage may be blocked or full')}};
@@ -215,7 +251,7 @@ function createVariations(){
   const heading=document.createElement('div');heading.className='variationHeading';
   const title=document.createElement('strong');title.textContent=item.title;
   const copy=document.createElement('button');copy.type='button';copy.className='btn small';copy.textContent='Copy prompt';
-  copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(item.prompt);toast(item.title+' copied')}catch(e){const area=document.createElement('textarea');area.value=item.prompt;target.appendChild(area);area.focus();area.select();toast('Select and copy the prompt text')}});heading.append(title,copy);
+  copy.addEventListener('click',async()=>{await copyTextReliable(item.prompt,copy,'Copy prompt')});heading.append(title,copy);
   const area=document.createElement('textarea');area.className='variationText';area.readOnly=true;area.value=item.prompt;area.setAttribute('aria-label',item.title);
   card.append(heading,area);target.appendChild(card);
  });
