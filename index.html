@@ -224,29 +224,36 @@ function createVariations(){
  const enabled={pose:$('varyPose').checked,hair:$('varyHair').checked,lighting:$('varyLighting').checked,outfit:$('varyOutfit').checked,expression:$('varyExpression').checked,scene:$('varyScene').checked};
  if($('keepOutfit').checked)enabled.outfit=false;
  if($('keepScene').checked)enabled.scene=false;
- // Hair variations affect movement/detail only; the character's base hair identity stays fixed.
  const active=Object.keys(enabled).filter(k=>enabled[k]);
  if(!active.length){toast('Choose at least one category to vary, or uncheck a fixed setting');return}
  const snapshot={};ids.forEach(id=>{const el=$(id);if(el)snapshot[id]=el.type==='checkbox'?el.checked:el.value});
  const results=[];
  try{
   for(let i=0;i<count;i++){
+   // Always start each variant from the same baseline so changes never leak.
+   Object.keys(snapshot).forEach(id=>{const el=$(id);if(el){if(el.type==='checkbox')el.checked=snapshot[id];else el.value=snapshot[id]}});
    active.forEach(key=>{
     const pool=variationPools[key]||[];
-    if(!pool.length)return;
-    const current=snapshot[key==='scene'?'location':key==='hair'?'hairMovement':key==='pose'?'pose':key==='lighting'?'lighting':key==='outfit'?'outfit':'expression'];
+    const field=key==='scene'?'location':key==='hair'?'hairMovement':key;
+    const current=String(snapshot[field]||'');
     const options=pool.filter(x=>x!==current);
-    if(options.length){const pick=options[(i+Math.floor(Math.random()*options.length))%options.length];const field=key==='scene'?'location':key==='hair'?'hairMovement':key;$(field).value=pick;}
+    if(options.length){
+     const pick=options[(i+Math.floor(Math.random()*options.length))%options.length];
+     $(field).value=pick;
+    }
    });
-   const prompt=build();
-   results.push({title:'Variation '+(i+1),prompt});
-   // Restore the baseline before creating the next independent variant.
-   Object.keys(snapshot).forEach(id=>{const el=$(id);if(el){if(el.type==='checkbox')el.checked=snapshot[id];else el.value=snapshot[id]}});
+   results.push({title:'Variation '+(i+1),prompt:build()});
   }
- }catch(err){toast('Variation creation failed; your original selections were restored');}
- finally{Object.keys(snapshot).forEach(id=>{const el=$(id);if(el){if(el.type==='checkbox')el.checked=snapshot[id];else el.value=snapshot[id]}});build();}
+ }catch(err){
+  console.error('Noir Muse variation generation error:',err);
+  toast('Variations failed: '+(err&&err.message?err.message:'unexpected error'));
+ }finally{
+  Object.keys(snapshot).forEach(id=>{const el=$(id);if(el){if(el.type==='checkbox')el.checked=snapshot[id];else el.value=snapshot[id]}});
+  build();
+ }
+ if(!results.length)return;
  const target=$('variationResults');target.innerHTML='';
- results.forEach((item,index)=>{
+ results.forEach(item=>{
   const card=document.createElement('div');card.className='variationCard';
   const heading=document.createElement('div');heading.className='variationHeading';
   const title=document.createElement('strong');title.textContent=item.title;
