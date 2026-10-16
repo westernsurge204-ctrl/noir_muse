@@ -4,6 +4,8 @@ on:
     paths:
       - 'atelier-preview.html'
       - 'atelier-mix-match.js'
+      - 'atelier-migration.js'
+      - 'atelier-gallery.js'
       - 'tests/atelier/**'
       - 'playwright.atelier.config.cjs'
       - 'package.json'

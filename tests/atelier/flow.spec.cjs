@@ -79,3 +79,38 @@ test('Mix & Match saves favorites for the selected character and exports them', 
  expect(other).toHaveLength(1);
  expect(other[0].characterId).toBeTruthy();
 });
+
+
+test('non-destructive Classic migration creates character copies', async ({page}) => {
+ await start(page);
+ await page.evaluate(() => {
+  localStorage.setItem('noirMuseProfiles',JSON.stringify({'Legacy Muse':{dna:{name:'Legacy Muse',age:'25 years old',face:'Oval',eyes:'Brown'},outfit:{top:'White shirt'}}}));
+  localStorage.setItem('noirMuseScenes',JSON.stringify({'Legacy Muse':{'Cafe day':{pose:'Seated',location:'Cafe'}}}));
+ });
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'Check Classic records'}).click();
+ await expect(page.locator('#migrationStatus')).toContainText('1 Classic characters');
+ page.once('dialog',dialog=>dialog.accept());
+ await page.getByRole('button',{name:'Import copies'}).click();
+ const record=await page.evaluate(()=>({
+  classic:JSON.parse(localStorage.getItem('noirMuseProfiles')),
+  atelier:JSON.parse(localStorage.getItem('noirMuseAtelierPreviewV1'))
+ }));
+ expect(record.classic['Legacy Muse'].dna.face).toBe('Oval');
+ expect(record.atelier.characters.some(c=>c.name==='Legacy Muse')).toBe(true);
+ expect(record.atelier.scenes.some(s=>s.title==='Cafe day')).toBe(true);
+});
+test('gallery imports photo for saved scene and remains after reload',async ({page})=>{
+ await start(page);await createCharacter(page);
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#sceneTitle').fill('Gallery moment');
+ await page.getByRole('button',{name:'Save to Storybook'}).click();
+ await page.getByRole('button',{name:'Stories',exact:true}).click();
+ await page.locator('#galleryScene').selectOption({label:'Untitled Collection / Gallery moment'});
+ await page.locator('#galleryImage').setInputFiles({name:'pixel.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==','base64')});
+ await page.getByRole('button',{name:'Add to collection'}).click();
+ await expect(page.locator('#galleryGrid img')).toHaveCount(1);
+ await page.reload();
+ await page.getByRole('button',{name:'Stories',exact:true}).click();
+ await expect(page.locator('#galleryGrid img')).toHaveCount(1);
+});
