@@ -114,3 +114,29 @@ test('gallery imports photo for saved scene and remains after reload',async ({pa
  await page.getByRole('button',{name:'Stories',exact:true}).click();
  await expect(page.locator('#galleryGrid img')).toHaveCount(1);
 });
+
+
+test('Easy Studio dropdowns compose prompt and preserve identity',async ({page})=>{
+ await start(page);await createCharacter(page,'Easy Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#quick-Top').selectOption('Satin blouse');
+ await page.locator('#quick-Location').selectOption('Beach café');
+ await page.locator('#quick-Expression').selectOption('Sarcastic');
+ await expect(page.locator('#prompt')).toContainText('Satin blouse');
+ await expect(page.locator('#prompt')).toContainText('Beach café');
+ await expect(page.locator('#prompt')).toContainText('Sarcastic');
+ const c=await page.evaluate(()=>JSON.parse(localStorage.getItem('noirMuseAtelierPreviewV1')).characters[0]);
+ expect(c.face).toBe('Round face, expressive eyes');
+});
+test('Easy Studio custom dropdown and lock shuffle',async ({page})=>{
+ await start(page);await createCharacter(page,'Custom Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#quick-Top').selectOption('__custom__');
+ await page.getByRole('textbox',{name:'Custom Top'}).fill('Hand embroidered indigo blouse');
+ const loc=page.locator('#quick-Location');
+ await loc.selectOption('Garden');
+ await page.getByRole('checkbox',{name:'Lock Location'}).check();
+ await page.getByRole('button',{name:'Surprise unlocked fields'}).click();
+ await expect(loc).toHaveValue('Garden');
+ await expect(page.locator('#prompt')).toContainText('Garden');
+});
