@@ -6,6 +6,7 @@ on:
       - 'atelier-mix-match.js'
       - 'atelier-migration.js'
       - 'atelier-gallery.js'
+      - 'atelier-easy-studio.js'
       - 'tests/atelier/**'
       - 'playwright.atelier.config.cjs'
       - 'package.json'
