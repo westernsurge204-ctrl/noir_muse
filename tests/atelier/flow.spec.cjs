@@ -161,3 +161,16 @@ test('dossier fields save individually and appear in prompt',async({page})=>{
  await expect(page.locator('#detail-eye-shape')).toBeDisabled();
  await expect(page.getByRole('checkbox',{name:'Lock Eye shape'})).toBeChecked();
 });
+
+test('dossier search and lock-all controls', async ({page})=>{
+ await start(page);
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'＋ New Character'}).click();
+ await page.locator('#dossierSearch').fill('eye');
+ await expect(page.locator('#detail-eye-shape')).toBeVisible();
+ await expect(page.locator('#detail-hair-texture')).toBeHidden();
+ await page.getByRole('button',{name:'Lock all'}).click();
+ await expect(page.locator('#detail-eye-shape')).toBeDisabled();
+ await page.getByRole('button',{name:'Unlock all'}).click();
+ await expect(page.locator('#detail-eye-shape')).toBeEnabled();
+});
