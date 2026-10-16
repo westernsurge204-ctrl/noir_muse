@@ -257,5 +257,5 @@ test('Copy Prompt offers manual selection when copy APIs are unavailable',async(
  await page.getByRole('button',{name:'Studio',exact:true}).click();
  await page.locator('#copyPrompt').click();
  await expect(page.locator('.copyRecovery')).toBeVisible();
- await expect(page.locator('.copyRecovery textarea')).toContainText('Recovery Muse');
+ await expect(page.locator('.copyRecovery textarea')).toHaveValue(/Recovery Muse/);
 });
