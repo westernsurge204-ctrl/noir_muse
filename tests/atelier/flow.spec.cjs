@@ -267,3 +267,22 @@ test('quality compiler prioritizes facial DNA and selected body proportions',asy
  await expect(page.locator('#prompt')).toContainText('recognizable');
  await expect(page.locator('#prompt')).toContainText('original identity references');
 });
+
+test('Copy Prompt writes the generated text to clipboard',async({page})=>{
+ await page.addInitScript(()=>{window.__copied=null;Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copied=text}}})});
+ await start(page);await createCharacter(page,'Copy Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#copyPrompt').click();
+ await expect(page.locator('#studioFeedback')).toContainText('Prompt copied');
+ const result=await page.evaluate(()=>window.__copied);
+ expect(result).toContain('Copy Muse');
+ expect(result).toContain('CAMERA AND CAPTURE');
+});
+test('Copy Prompt offers manual selection when copy APIs are unavailable',async({page})=>{
+ await page.addInitScript(()=>{Object.defineProperty(navigator,'clipboard',{configurable:true,value:undefined});document.addEventListener('DOMContentLoaded',()=>{document.execCommand=()=>false})});
+ await start(page);await createCharacter(page,'Recovery Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#copyPrompt').click();
+ await expect(page.locator('.copyRecovery')).toBeVisible();
+ await expect(page.locator('.copyRecovery textarea')).toHaveValue(/Recovery Muse/);
+});
