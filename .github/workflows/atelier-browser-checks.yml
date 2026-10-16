@@ -7,6 +7,7 @@ on:
       - 'atelier-migration.js'
       - 'atelier-gallery.js'
       - 'atelier-easy-studio.js'
+      - 'atelier-dossier-details.js'
       - 'tests/atelier/**'
       - 'playwright.atelier.config.cjs'
       - 'package.json'
