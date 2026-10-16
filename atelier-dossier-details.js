@@ -34,7 +34,7 @@ const specs={
 'Eyebrows':['Softly arched','Straight','Full natural','Fine natural','Uneven natural','High arch'],
 'Nose':['Small straight','Rounded tip','Soft button','Defined bridge','Wide bridge','Aquiline'],
 'Lips':['Natural medium','Full','Thin','Defined cupid bow','Uneven natural'],
-'Skin tone':['Fair warm','Light brown','Medium brown','Deep brown','Olive','Neutral beige'],
+'Skin tone':['Very fair','Fair cool','Fair neutral','Fair warm','Light beige','Light golden','Light olive','Light brown','Wheatish','Warm medium brown','Neutral medium brown','Olive brown','Golden brown','Caramel','Honey brown','Tan brown','Deep brown','Rich dark brown','Deep ebony','Cool deep brown','Neutral beige'],
 'Skin texture':['Natural pores','Freckles','Slight uneven pigmentation','Natural under-eye softness','Visible fine skin texture'],
 'Hair color':['Natural black','Dark brown','Chestnut','Light brown','Blonde','Auburn','Cherry highlights'],
 'Hair length':['Short','Shoulder length','Mid-back','Waist length','Long'],
