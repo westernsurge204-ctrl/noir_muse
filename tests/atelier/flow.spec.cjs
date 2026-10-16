@@ -41,13 +41,13 @@ test('scene edits preserve stored character identity', async ({ page }) => {
 test('draft persists without altering original Noir Muse keys', async ({ page }) => {
  await start(page); await createCharacter(page);
  await page.getByRole('button',{name:'Studio',exact:true}).click();
- await page.locator('#five-place').selectOption('Balcony');
+ await page.locator('.fiveSection').nth(2).locator('summary').click(); await page.locator('#five-place').selectOption('Balcony');
  await page.reload(); await page.getByRole('button',{name:'Studio',exact:true}).click();
  await expect(page.locator('#five-place')).toHaveValue('Balcony');
  const untouched=await page.evaluate(()=>['noirMuseProfiles','noirMuseScenes','noirMuseOutfits'].every(k=>localStorage.getItem(k)===null));
  expect(untouched).toBe(true);
 });
-test('five-section locking and surprise preserves scene', async ({page})=>{await start(page);await createCharacter(page);await page.getByRole('button',{name:'Studio',exact:true}).click();await page.locator('#five-place').selectOption('Beach');await page.getByRole('checkbox',{name:'Lock Location'}).check();await page.locator('#fiveShuffle').click();await expect(page.locator('#five-place')).toHaveValue('Beach');await expect(page.locator('#prompt')).toContainText('Beach');});
+test('five-section locking and surprise preserves scene', async ({page})=>{await start(page);await createCharacter(page);await page.getByRole('button',{name:'Studio',exact:true}).click();await page.locator('.fiveSection').nth(2).locator('summary').click(); await page.locator('#five-place').selectOption('Beach');await page.getByRole('checkbox',{name:'Lock Location'}).check();await page.locator('#fiveShuffle').click();await expect(page.locator('#five-place')).toHaveValue('Beach');await expect(page.locator('#prompt')).toContainText('Beach');});
 test.skip('Legacy Mix & Match saves favorites for the selected character and exports them', async ({ page }) => {
  await start(page); await createCharacter(page,'Muse One');
  await page.getByRole('button',{name:'Studio',exact:true}).click();
@@ -103,7 +103,7 @@ test('gallery imports photo for saved scene and remains after reload',async ({pa
 });
 
 
-test('five-section wardrobe and scene dropdowns compile prompt',async ({page})=>{await start(page);await createCharacter(page);await page.getByRole('button',{name:'Studio',exact:true}).click();await page.locator('#five-top').selectOption('Blouse');await page.locator('#five-place').selectOption('Beach café');await page.locator('#five-expression').selectOption('Sarcastic');await expect(page.locator('#prompt')).toContainText('Blouse');await expect(page.locator('#prompt')).toContainText('Beach café');await expect(page.locator('#prompt')).toContainText('Sarcastic');});
+test('five-section wardrobe and scene dropdowns compile prompt',async ({page})=>{await start(page);await createCharacter(page);await page.getByRole('button',{name:'Studio',exact:true}).click();await page.locator('#five-top').selectOption('Blouse');await page.locator('.fiveSection').nth(2).locator('summary').click(); await page.locator('#five-place').selectOption('Beach café');await page.locator('.fiveSection').nth(3).locator('summary').click(); await page.locator('#five-expression').selectOption('Sarcastic');await expect(page.locator('#prompt')).toContainText('Blouse');await expect(page.locator('#prompt')).toContainText('Beach café');await expect(page.locator('#prompt')).toContainText('Sarcastic');});
 test('dossier fields save individually and appear in prompt',async({page})=>{
  await start(page);
  await page.getByRole('button',{name:'Characters',exact:true}).click();
