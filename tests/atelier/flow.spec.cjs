@@ -151,3 +151,22 @@ test('nationality and ethnicity are saved, compiled, and survive editing without
  expect(data.ethnicity).toBe('Custom community');
  expect(data.identityDetails['Face shape'].value).toBe('Round');
 });
+
+test('Identity Details v2 saves hairstyle and independent locks across six groups',async ({page})=>{
+ await start(page);
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'＋ New Character'}).click();
+ await page.locator('#cName').fill('Hair Identity');
+ await expect(page.locator('.identityGroup')).toHaveCount(6);
+ await page.locator('#detail-signature-hairstyle').selectOption('Low messy bun');
+ await page.locator('#detail-haircut').selectOption('Long layers');
+ await page.getByRole('checkbox',{name:'Lock Signature hairstyle'}).check();
+ await page.getByRole('button',{name:'Save dossier'}).click();
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await expect(page.locator('#prompt')).toContainText('Signature hairstyle: Low messy bun');
+ await page.reload();
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'Open dossier'}).click();
+ await expect(page.locator('#detail-signature-hairstyle')).toHaveValue('Low messy bun');
+ await expect(page.locator('#detail-signature-hairstyle')).toBeDisabled();
+});
