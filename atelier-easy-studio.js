@@ -25,7 +25,7 @@ function apply(){
 const val=k=>getValue(k),location=val('Location'),mood=val('Expression'),camera=val('Camera');
 for(const [kind,v] of [['place',location],['mood',mood],['camera',camera]]){if(!diceChoices[kind].includes(v))diceChoices[kind].push(v);diceState[kind]=diceChoices[kind].indexOf(v)}
 const outfit=[val('Top'),val('Bottom'),val('One-piece'),val('Color'),val('Hair'),val('Accessories')].filter(v=>v&&!['Keep current','None','Natural / unspecified','Keep signature hair'].includes(v)).join('; ');
-$('sOutfit').value=outfit;$('sPose').value=val('Pose');$('sLight').value=val('Lighting');
+$('sOutfit').value=outfit;$('sPose').value=val('Pose');const light=val('Lighting');if(light&&![...$('sLight').options].some(o=>o.value===light))$('sLight').add(new Option(light,light));$('sLight').value=light;
 const framing=val('Framing');$('sNotes').value=framing==='Natural imperfect framing'?'':framing;
 renderDice();for(const id of ['sOutfit','sPose','sLight','sNotes'])$(id).dispatchEvent(new Event('input',{bubbles:true}));
 saveStudioDraft();return compile();
