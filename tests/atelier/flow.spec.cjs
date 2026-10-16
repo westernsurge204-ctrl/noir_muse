@@ -59,3 +59,23 @@ test('creative dice locking and reroll works', async ({ page }) => {
  await dice.getByRole('button',{name:'↝ Reroll'}).click();
  await expect(dice.locator('strong')).not.toHaveText(original);
 });
+
+
+test('Mix & Match saves favorites for the selected character and exports them', async ({ page }) => {
+ await start(page); await createCharacter(page,'Muse One');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#mix-Top').selectOption('Classic shirt');
+ await page.locator('#mix-Bottom').selectOption('Straight jeans');
+ await page.locator('#mixName').fill('Everyday favorite');
+ await page.locator('#mixSave').click();
+ await expect(page.locator('#mixFeedback')).toContainText('Favorite saved');
+ await page.locator('#mix-Top').selectOption('None');
+ await page.locator('#mixFavorite').selectOption({label:'Everyday favorite'});
+ await page.locator('#mixLoad').click();
+ await expect(page.locator('#mix-Top')).toHaveValue('Classic shirt');
+ await page.locator('#mixApply').click();
+ await expect(page.locator('#sOutfit')).toContainText('Classic shirt');
+ const other=await page.evaluate(()=>JSON.parse(localStorage.getItem('noirMuseAtelierMixFavoritesV1')));
+ expect(other).toHaveLength(1);
+ expect(other[0].characterId).toBeTruthy();
+});
