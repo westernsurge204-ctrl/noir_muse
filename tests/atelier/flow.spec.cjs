@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { pathToFileURL } = require('node:url');
 const path = require('node:path');
 const pageUrl = pathToFileURL(path.resolve(__dirname, '../../atelier-preview.html')).href;
-async function start(page) { await page.goto(pageUrl); await page.locator('#promptMode').selectOption('Detailed Control'); }
+async function start(page) { await page.goto(pageUrl); await page.locator('#promptMode').evaluate(el=>{el.value='Detailed Control';el.dispatchEvent(new Event('change',{bubbles:true}))}); }
 async function createCharacter(page, name='Test Character') {
  await page.getByRole('button',{name:'Characters',exact:true}).click();
  await page.getByRole('button',{name:'＋ New Character'}).click();
