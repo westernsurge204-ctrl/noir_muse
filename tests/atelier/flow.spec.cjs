@@ -74,7 +74,7 @@ test('Mix & Match saves favorites for the selected character and exports them', 
  await page.locator('#mixLoad').click();
  await expect(page.locator('#mix-Top')).toHaveValue('Classic shirt');
  await page.locator('#mixApply').click();
- await expect(page.locator('#sOutfit')).toContainText('Classic shirt');
+ await expect(page.locator('#sOutfit')).toHaveValue(/Classic shirt/);
  const other=await page.evaluate(()=>JSON.parse(localStorage.getItem('noirMuseAtelierMixFavoritesV1')));
  expect(other).toHaveLength(1);
  expect(other[0].characterId).toBeTruthy();
