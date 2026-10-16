@@ -10,6 +10,7 @@ async function createCharacter(page, name='Test Character') {
  await page.locator('#cAge').fill('25');
  await page.locator('#cNationality').selectOption('Indian');
  await page.locator('#cEthnicity').selectOption('South Asian');
+ await page.locator('.identityGroup').first().locator('summary').click();
  await page.locator('#detail-face-shape').selectOption('Round');
  await page.getByRole('button',{name:'Save dossier'}).click();
  await expect(page.locator('#characterFeedback')).toContainText('Dossier saved');
@@ -109,6 +110,7 @@ test('dossier fields save individually and appear in prompt',async({page})=>{
  await page.getByRole('button',{name:'Characters',exact:true}).click();
  await page.getByRole('button',{name:'＋ New Character'}).click();
  await page.locator('#cName').fill('Detailed Muse');
+ await page.locator('.identityGroup').nth(1).locator('summary').click();
  await page.locator('#detail-eye-shape').selectOption('Downturned');
  await page.locator('#detail-hair-texture').selectOption('Natural waves');
  await page.getByRole('checkbox',{name:'Lock Eye shape'}).check();
