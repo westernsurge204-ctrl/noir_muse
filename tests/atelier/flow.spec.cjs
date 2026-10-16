@@ -197,3 +197,28 @@ test('expanded skin tones are selectable in Identity Details',async({page})=>{
  await page.locator('#detail-skin-tone').selectOption('Caramel');
  await expect(page.locator('#detail-skin-tone')).toHaveValue('Caramel');
 });
+
+test('separate top/bottom colors and patterns survive reload and compile', async ({page})=>{
+ await start(page); await createCharacter(page,'Palette Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#five-colorMode').selectOption('Two-tone');
+ await page.locator('#five-topColor').selectOption('Lavender');
+ await page.locator('#five-bottomColor').selectOption('Navy blue');
+ await page.locator('#five-accentColor').selectOption('Rose gold');
+ await page.locator('#five-pattern').selectOption('Floral');
+ await page.locator('#five-patternScale').selectOption('Fine / small');
+ await expect(page.locator('#prompt')).toContainText('Lavender');
+ await expect(page.locator('#prompt')).toContainText('Navy blue');
+ await expect(page.locator('#prompt')).toContainText('Floral');
+ await page.reload(); await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await expect(page.locator('#five-topColor')).toHaveValue('Lavender');
+ await expect(page.locator('#five-bottomColor')).toHaveValue('Navy blue');
+ await expect(page.locator('#five-pattern')).toHaveValue('Floral');
+});
+test('bust proportions offer finer values',async ({page})=>{
+ await start(page);await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'＋ New Character'}).click();
+ await page.locator('.identityGroup').nth(4).locator('summary').click();
+ await page.locator('#detail-bust-proportions').selectOption('Medium-full');
+ await expect(page.locator('#detail-bust-proportions')).toHaveValue('Medium-full');
+});
