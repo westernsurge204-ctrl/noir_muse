@@ -8,7 +8,9 @@ async function createCharacter(page, name='Test Character') {
  await page.getByRole('button',{name:'＋ New Character'}).click();
  await page.locator('#cName').fill(name);
  await page.locator('#cAge').fill('25');
- await page.locator('#cFace').fill('Round face, expressive eyes');
+ await page.locator('#cNationality').selectOption('Indian');
+ await page.locator('#cEthnicity').selectOption('South Asian');
+ await page.locator('#detail-face-shape').selectOption('Round');
  await page.getByRole('button',{name:'Save dossier'}).click();
  await expect(page.locator('#characterFeedback')).toContainText('Dossier saved');
 }
@@ -35,8 +37,8 @@ test('scene edits preserve stored character identity', async ({ page }) => {
  await page.locator('#sceneTitle').fill('Night');
  await page.getByRole('button',{name:'Save to Storybook'}).click();
  const data=await page.evaluate(()=>JSON.parse(localStorage.getItem('noirMuseAtelierPreviewV1')));
- expect(data.characters[0].face).toBe('Round face, expressive eyes');
- expect(data.scenes[0].identitySnapshot.face).toBe('Round face, expressive eyes');
+ expect(data.characters[0].identityDetails['Face shape'].value).toBe('Round');
+ expect(data.scenes[0].identitySnapshot.identityDetails['Face shape'].value).toBe('Round');
 });
 test('draft persists without altering original Noir Muse keys', async ({ page }) => {
  await start(page); await createCharacter(page);
@@ -126,7 +128,7 @@ test('Easy Studio dropdowns compose prompt and preserve identity',async ({page})
  await expect(page.locator('#prompt')).toContainText('Beach café');
  await expect(page.locator('#prompt')).toContainText('Sarcastic');
  const c=await page.evaluate(()=>JSON.parse(localStorage.getItem('noirMuseAtelierPreviewV1')).characters[0]);
- expect(c.face).toBe('Round face, expressive eyes');
+ expect(c.identityDetails['Face shape'].value).toBe('Round');
 });
 test('Easy Studio custom dropdown and lock shuffle',async ({page})=>{
  await start(page);await createCharacter(page,'Custom Muse');
@@ -173,4 +175,19 @@ test('dossier search and lock-all controls', async ({page})=>{
  await expect(page.locator('#detail-eye-shape')).toBeDisabled();
  await page.getByRole('button',{name:'Unlock all'}).click();
  await expect(page.locator('#detail-eye-shape')).toBeEnabled();
+});
+
+test('nationality and ethnicity are saved, compiled, and survive editing without losing details', async ({page})=>{
+ await start(page); await createCharacter(page,'Identity Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await expect(page.locator('#prompt')).toContainText('Nationality: Indian');
+ await expect(page.locator('#prompt')).toContainText('Ethnicity: South Asian');
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'Open dossier'}).click();
+ await page.locator('#cEthnicity').selectOption('Other / custom');
+ await page.locator('#cEthnicityCustom').fill('Custom community');
+ await page.getByRole('button',{name:'Save dossier'}).click();
+ const data=await page.evaluate(()=>JSON.parse(localStorage.getItem('noirMuseAtelierPreviewV1')).characters[0]);
+ expect(data.ethnicity).toBe('Custom community');
+ expect(data.identityDetails['Face shape'].value).toBe('Round');
 });
