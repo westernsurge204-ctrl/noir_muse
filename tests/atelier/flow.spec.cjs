@@ -222,3 +222,21 @@ test('bust proportions offer finer values',async ({page})=>{
  await page.locator('#detail-bust-proportions').selectOption('Medium-full');
  await expect(page.locator('#detail-bust-proportions')).toHaveValue('Medium-full');
 });
+
+test('prompt clearly labels category, subcategory and wardrobe specifics',async({page})=>{
+ await start(page);await createCharacter(page,'Label Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#five-category').selectOption('Bikini / swimwear');
+ await page.locator('#five-sub').selectOption('Bandeau bikini');
+ await page.locator('#five-shape').selectOption('Matching set');
+ await page.locator('#five-colorMode').selectOption('Two-tone');
+ await page.locator('#five-topColor').selectOption('Off-white');
+ await page.locator('#five-bottomColor').selectOption('Camel');
+ await page.locator('#five-pattern').selectOption('Tie-dye');
+ await expect(page.locator('#prompt')).toContainText('Main category: Bikini / swimwear');
+ await expect(page.locator('#prompt')).toContainText('Subcategory: Bandeau bikini');
+ await expect(page.locator('#prompt')).toContainText('Clothing configuration: Matching set');
+ await expect(page.locator('#prompt')).toContainText('Primary/top color: Off-white');
+ await expect(page.locator('#prompt')).toContainText('Secondary/bottom color: Camel');
+ await expect(page.locator('#prompt')).toContainText('Pattern / design: Tie-dye');
+});
