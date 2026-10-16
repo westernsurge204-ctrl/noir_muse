@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { pathToFileURL } = require('node:url');
 const path = require('node:path');
 const pageUrl = pathToFileURL(path.resolve(__dirname, '../../atelier-preview.html')).href;
-async function start(page) { await page.goto(pageUrl); }
+async function start(page) { await page.goto(pageUrl); await page.locator('#promptMode').selectOption('Detailed Control'); }
 async function createCharacter(page, name='Test Character') {
  await page.getByRole('button',{name:'Characters',exact:true}).click();
  await page.getByRole('button',{name:'＋ New Character'}).click();
@@ -285,4 +285,19 @@ test('Copy Prompt offers manual selection when copy APIs are unavailable',async(
  await page.locator('#copyPrompt').click();
  await expect(page.locator('.copyRecovery')).toBeVisible();
  await expect(page.locator('.copyRecovery textarea')).toHaveValue(/Recovery Muse/);
+});
+
+test('Gemini Natural creates concise photo description and keeps detailed fallback',async({page})=>{
+ await start(page);await createCharacter(page,'Natural Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#five-top').selectOption('Blouse');
+ await page.locator('.fiveSection').nth(1).locator('summary').click();
+ await page.locator('#five-photographer').selectOption('Friend-taken');
+ await page.locator('#promptMode').selectOption('Gemini Natural');
+ await expect(page.locator('#prompt')).toContainText('photo taken by a friend');
+ await expect(page.locator('#prompt')).toContainText('unplanned photograph');
+ await expect(page.locator('#prompt')).not.toContainText('IDENTITY AND SCENE PRIORITIES');
+ await expect(page.locator('#prompt')).toContainText('Blouse');
+ await page.locator('#promptMode').selectOption('Detailed Control');
+ await expect(page.locator('#prompt')).toContainText('IDENTITY AND SCENE PRIORITIES');
 });
