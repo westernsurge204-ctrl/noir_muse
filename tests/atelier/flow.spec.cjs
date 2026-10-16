@@ -140,3 +140,24 @@ test('Easy Studio custom dropdown and lock shuffle',async ({page})=>{
  await expect(loc).toHaveValue('Garden');
  await expect(page.locator('#prompt')).toContainText('Garden');
 });
+
+
+test('dossier fields save individually and appear in prompt',async({page})=>{
+ await start(page);
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'＋ New Character'}).click();
+ await page.locator('#cName').fill('Detailed Muse');
+ await page.locator('#detail-eye-shape').selectOption('Downturned');
+ await page.locator('#detail-hair-texture').selectOption('Natural waves');
+ await page.getByRole('checkbox',{name:'Lock Eye shape'}).check();
+ await page.getByRole('button',{name:'Save dossier'}).click();
+ await expect(page.locator('#dossierDetailStatus')).toContainText('saved');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await expect(page.locator('#prompt')).toContainText('Eye shape: Downturned');
+ await expect(page.locator('#prompt')).toContainText('Hair texture: Natural waves');
+ await page.reload();
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'Open dossier'}).click();
+ await expect(page.locator('#detail-eye-shape')).toBeDisabled();
+ await expect(page.getByRole('checkbox',{name:'Lock Eye shape'})).toBeChecked();
+});
