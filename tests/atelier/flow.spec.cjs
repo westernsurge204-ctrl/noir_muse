@@ -276,7 +276,7 @@ test('Copy Prompt writes the generated text to clipboard',async({page})=>{
  await expect(page.locator('#studioFeedback')).toContainText('Prompt copied');
  const result=await page.evaluate(()=>window.__copied);
  expect(result).toContain('Copy Muse');
- expect(result).toContain('PHOTOGRAPHY');
+ expect(result).toContain('CAMERA AND CAPTURE');
 });
 test('Copy Prompt offers manual selection when copy APIs are unavailable',async({page})=>{
  await page.addInitScript(()=>{Object.defineProperty(navigator,'clipboard',{configurable:true,value:undefined});document.addEventListener('DOMContentLoaded',()=>{document.execCommand=()=>false})});
