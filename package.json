@@ -1,0 +1,10 @@
+{
+  "name": "noir-muse-atelier-preview",
+  "private": true,
+  "scripts": {
+    "test:atelier": "playwright test --config=playwright.atelier.config.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}
