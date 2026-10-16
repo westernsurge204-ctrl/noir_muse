@@ -172,3 +172,27 @@ test('Identity Details v2 saves hairstyle and independent locks across six group
  await expect(page.locator('#detail-signature-hairstyle')).toHaveValue('Low messy bun');
  await expect(page.locator('#detail-signature-hairstyle')).toBeDisabled();
 });
+
+test('bikini category shows only swimwear pieces and coverage controls',async({page})=>{
+ await start(page);await createCharacter(page,'Swim Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#five-category').selectOption('Bikini / swimwear');
+ await expect(page.locator('#five-top option')).toContainText(['Triangle bikini top','Halter bikini top']);
+ await expect(page.locator('#five-top option')).not.toContainText('T-shirt');
+ await expect(page.locator('#five-bottom option')).toContainText('Tie-side bikini bottom');
+ await page.locator('#five-top').selectOption('Triangle bikini top');
+ await page.locator('#five-coverage').selectOption('Skimpy');
+ await page.locator('#five-cleavage').selectOption('Moderate cleavage');
+ await expect(page.locator('#prompt')).toContainText('Triangle bikini top');
+ await expect(page.locator('#prompt')).toContainText('Moderate cleavage');
+ await page.reload();await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await expect(page.locator('#five-category')).toHaveValue('Bikini / swimwear');
+ await expect(page.locator('#five-top')).toHaveValue('Triangle bikini top');
+});
+test('expanded skin tones are selectable in Identity Details',async({page})=>{
+ await start(page);await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'＋ New Character'}).click();
+ await page.locator('.identityGroup').nth(2).locator('summary').click();
+ await page.locator('#detail-skin-tone').selectOption('Caramel');
+ await expect(page.locator('#detail-skin-tone')).toHaveValue('Caramel');
+});
