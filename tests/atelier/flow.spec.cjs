@@ -169,7 +169,7 @@ test('dossier search and lock-all controls', async ({page})=>{
  await page.locator('#dossierSearch').fill('eye');
  await expect(page.locator('#detail-eye-shape')).toBeVisible();
  await expect(page.locator('#detail-hair-texture')).toBeHidden();
- await page.getByRole('button',{name:'Lock all'}).click();
+ await page.getByRole('button',{name:'Lock all',exact:true}).click();
  await expect(page.locator('#detail-eye-shape')).toBeDisabled();
  await page.getByRole('button',{name:'Unlock all'}).click();
  await expect(page.locator('#detail-eye-shape')).toBeEnabled();
