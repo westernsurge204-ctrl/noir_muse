@@ -177,9 +177,10 @@ test('bikini category shows only swimwear pieces and coverage controls',async({p
  await start(page);await createCharacter(page,'Swim Muse');
  await page.getByRole('button',{name:'Studio',exact:true}).click();
  await page.locator('#five-category').selectOption('Bikini / swimwear');
- await expect(page.locator('#five-top option')).toContainText(['Triangle bikini top','Halter bikini top']);
- await expect(page.locator('#five-top option')).not.toContainText('T-shirt');
- await expect(page.locator('#five-bottom option')).toContainText('Tie-side bikini bottom');
+ await expect(page.locator('#five-top')).toContainText('Triangle bikini top');
+ await expect(page.locator('#five-top')).toContainText('Halter bikini top');
+ await expect(page.locator('#five-top')).not.toContainText('T-shirt');
+ await expect(page.locator('#five-bottom')).toContainText('Tie-side bikini bottom');
  await page.locator('#five-top').selectOption('Triangle bikini top');
  await page.locator('#five-coverage').selectOption('Skimpy');
  await page.locator('#five-cleavage').selectOption('Moderate cleavage');
