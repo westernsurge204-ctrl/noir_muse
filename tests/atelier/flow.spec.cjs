@@ -10,6 +10,7 @@ async function createCharacter(page, name='Test Character') {
  await page.locator('#cAge').fill('25');
  await page.locator('#cNationality').selectOption('Indian');
  await page.locator('#cEthnicity').selectOption('South Asian');
+ await page.locator('.identityGroup').first().locator('summary').click();
  await page.locator('#detail-face-shape').selectOption('Round');
  await page.getByRole('button',{name:'Save dossier'}).click();
  await expect(page.locator('#characterFeedback')).toContainText('Dossier saved');
@@ -109,6 +110,7 @@ test('dossier fields save individually and appear in prompt',async({page})=>{
  await page.getByRole('button',{name:'Characters',exact:true}).click();
  await page.getByRole('button',{name:'＋ New Character'}).click();
  await page.locator('#cName').fill('Detailed Muse');
+ await page.locator('.identityGroup').nth(1).locator('summary').click();
  await page.locator('#detail-eye-shape').selectOption('Downturned');
  await page.locator('#detail-hair-texture').selectOption('Natural waves');
  await page.getByRole('checkbox',{name:'Lock Eye shape'}).check();
@@ -121,7 +123,7 @@ test('dossier fields save individually and appear in prompt',async({page})=>{
  await page.getByRole('button',{name:'Characters',exact:true}).click();
  await page.getByRole('button',{name:'Open dossier'}).click();
  await expect(page.locator('#detail-eye-shape')).toBeDisabled();
- await expect(page.getByRole('checkbox',{name:'Lock Eye shape'})).toBeChecked();
+ await expect(page.locator('#detail-eye-shape').locator('xpath=..').locator('input[type=checkbox]')).toBeChecked();
 });
 
 test('dossier search and lock-all controls', async ({page})=>{
@@ -150,4 +152,23 @@ test('nationality and ethnicity are saved, compiled, and survive editing without
  const data=await page.evaluate(()=>JSON.parse(localStorage.getItem('noirMuseAtelierPreviewV1')).characters[0]);
  expect(data.ethnicity).toBe('Custom community');
  expect(data.identityDetails['Face shape'].value).toBe('Round');
+});
+
+test('Identity Details v2 saves hairstyle and independent locks across six groups',async ({page})=>{
+ await start(page);
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'＋ New Character'}).click();
+ await page.locator('#cName').fill('Hair Identity');
+ await expect(page.locator('.identityGroup')).toHaveCount(6);
+ await page.locator('#detail-signature-hairstyle').selectOption('Low messy bun');
+ await page.locator('#detail-haircut').selectOption('Long layers');
+ await page.getByRole('checkbox',{name:'Lock Signature hairstyle'}).check();
+ await page.getByRole('button',{name:'Save dossier'}).click();
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await expect(page.locator('#prompt')).toContainText('Signature hairstyle: Low messy bun');
+ await page.reload();
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'Open dossier'}).click();
+ await expect(page.locator('#detail-signature-hairstyle')).toHaveValue('Low messy bun');
+ await expect(page.locator('#detail-signature-hairstyle')).toBeDisabled();
 });

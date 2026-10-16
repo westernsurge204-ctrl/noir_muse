@@ -2,6 +2,29 @@
 (function(){
 const $=id=>document.getElementById(id),storage='noirMuseDossierDetailsV1';
 const specs={
+'Forehead':['Average','Broad','Narrow','Rounded','High forehead'],
+'Facial asymmetry':['Natural subtle asymmetry','Uneven smile','Slightly uneven eyes','Distinctive asymmetric features'],
+'Eye size':['Small','Medium','Large','Naturally proportioned'],
+'Eye spacing':['Close-set','Average','Wide-set'],
+'Eyelids':['Monolid','Hooded','Double eyelid','Heavy-lidded','Visible crease'],
+'Under-eye appearance':['Natural softness','Full under-eyes','Light shadows','Subtle under-eye lines'],
+'Nose bridge':['Low bridge','Straight bridge','High bridge','Prominent bridge'],
+'Nose tip':['Rounded','Upturned','Downturned','Defined','Soft tip'],
+'Lip shape':['Rounded','Cupid bow','Wide smile','Soft asymmetrical'],
+'Natural lip color':['Pink-brown','Rose','Neutral brown','Mauve','Deep brown'],
+'Skin undertone':['Warm','Cool','Neutral','Olive','Golden'],
+'Distinctive marks':['None','Freckles','Beauty mark','Dimples','Small scar','Birthmark'],
+'Haircut':['Long layers','Blunt cut','Wolf cut','Bob','Lob','Pixie','Shag','U-cut','Straight cut'],
+'Signature hairstyle':['Loose natural hair','Soft waves','Straight and loose','Low messy bun','Ponytail','Half-up','Braided','Short tousled'],
+'Fringe / bangs':['None','Curtain bangs','Full fringe','Side bangs','Wispy bangs'],
+'Hair parting':['Center','Left side','Right side','Natural uneven part'],
+'Hair volume':['Fine','Average','Full','Thick','Voluminous'],
+'Bust proportions':['Small','Average','Full','Proportionate to frame'],
+'Torso length':['Short torso','Balanced torso','Long torso'],
+'Leg proportions':['Shorter legs','Balanced','Long-legged'],
+'Overall silhouette':['Straight','Hourglass','Pear-shaped','Athletic','Soft curvy'],
+'Teeth and smile':['Natural teeth','Toothy smile','Closed-lip smile','Slightly uneven teeth','One-sided smile'],
+'Signature features':['Subtle dimples','Distinctive smile','Signature glasses','Natural facial asymmetry','Beauty mark'],
 'Face shape':['Oval','Soft oval','Round','Heart-shaped','Square','Diamond','Oblong','Softly angular'],
 'Cheeks':['Natural fullness','Full cheeks','High cheekbones','Softly rounded cheeks','Subtle cheekbones'],
 'Jawline':['Soft taper','Rounded jaw','Defined jaw','Narrow jaw','Broad jaw'],
@@ -33,8 +56,18 @@ const host=$('characterEditor');if(!host)return;
 const section=document.createElement('section');section.className='dossierDetails';section.innerHTML='<div class="divider"></div><div class="subhead"><h3>Identity details</h3><span class="eyebrow">INDEPENDENT LOCKS</span></div><p class="dataHint">Choose precise features or select Custom. Lock each detail to prevent accidental changes. These structured choices are saved with the dossier and included in the generated identity description.</p><div class="btnrow" style="margin:12px 0"><button type="button" class="btn" id="dossierLockAll">Lock all</button><button type="button" class="btn quiet" id="dossierUnlockAll">Unlock all</button></div><div class="field" style="margin-bottom:12px"><label for="dossierSearch">Find a detail</label><input id="dossierSearch" type="search" placeholder="Search face, hair, skin, body…"></div><div id="dossierDetailGrid" class="formgrid"></div><p id="dossierDetailStatus" class="status" role="status"></p>';
 host.querySelector('.btnrow').before(section);
 const grid=section.querySelector('#dossierDetailGrid'),controls={};
-for(const label of labels){const id='detail-'+label.toLowerCase().replace(/[^a-z0-9]+/g,'-');const cell=document.createElement('div');cell.className='field';cell.dataset.detailLabel=label.toLowerCase();const title=document.createElement('label');title.htmlFor=id;title.textContent=label;const sel=document.createElement('select');sel.id=id;sel.add(new Option('Not specified',''));for(const option of specs[label])sel.add(new Option(option,option));sel.add(new Option('Custom…','__custom__'));const custom=document.createElement('input');custom.placeholder='Custom '+label.toLowerCase();custom.hidden=true;custom.maxLength=240;custom.setAttribute('aria-label','Custom '+label);const lockLabel=document.createElement('label');lockLabel.className='detailLock';const check=document.createElement('input');check.type='checkbox';check.setAttribute('aria-label','Lock '+label);lockLabel.append(check,document.createTextNode(' Lock this detail'));cell.append(title,sel,custom,lockLabel);grid.append(cell);controls[label]={sel,custom,check};sel.onchange=()=>{custom.hidden=sel.value!=='__custom__';custom.disabled=check.checked};check.onchange=()=>{sel.disabled=check.checked;custom.disabled=check.checked};}
-$('dossierSearch').oninput=()=>{const q=$('dossierSearch').value.trim().toLowerCase();for(const cell of grid.children)cell.hidden=!cell.dataset.detailLabel.includes(q)};
+const groupDefinitions=[
+['Face & facial structure',['Face shape','Forehead','Cheeks','Jawline','Chin','Facial asymmetry']],
+['Eyes, brows, nose & lips',['Eye shape','Eye color','Eye size','Eye spacing','Eyelids','Under-eye appearance','Eyebrows','Nose','Nose bridge','Nose tip','Lips','Lip shape','Natural lip color']],
+['Skin & distinguishing marks',['Skin tone','Skin undertone','Skin texture','Distinctive marks']],
+['Hair identity',['Hair color','Hair length','Hair texture','Haircut','Signature hairstyle','Fringe / bangs','Hair parting','Hair volume']],
+['Body & proportions',['Height','Body frame','Shoulders','Bust proportions','Waist','Hips','Torso length','Leg proportions','Overall silhouette']],
+['Signature characteristics',['Posture','Personality','Typical expression','Teeth and smile','Signature features']]
+];
+const groups={};for(const [name,fields] of groupDefinitions){const details=document.createElement('details');details.className='identityGroup';details.open=name==='Hair identity';const summary=document.createElement('summary');summary.textContent=name;const inner=document.createElement('div');inner.className='formgrid';details.append(summary,inner);grid.append(details);for(const field of fields)groups[field]=inner}
+
+for(const label of labels){const id='detail-'+label.toLowerCase().replace(/[^a-z0-9]+/g,'-');const cell=document.createElement('div');cell.className='field';cell.dataset.detailLabel=label.toLowerCase();const title=document.createElement('label');title.htmlFor=id;title.textContent=label;const sel=document.createElement('select');sel.id=id;sel.add(new Option('Not specified',''));for(const option of specs[label])sel.add(new Option(option,option));sel.add(new Option('Custom…','__custom__'));const custom=document.createElement('input');custom.placeholder='Custom '+label.toLowerCase();custom.hidden=true;custom.maxLength=240;custom.setAttribute('aria-label','Custom '+label);const lockLabel=document.createElement('label');lockLabel.className='detailLock';const check=document.createElement('input');check.type='checkbox';check.setAttribute('aria-label','Lock '+label);lockLabel.append(check,document.createTextNode(' Lock this detail'));cell.append(title,sel,custom,lockLabel);(groups[label]||grid).append(cell);controls[label]={sel,custom,check};sel.onchange=()=>{custom.hidden=sel.value!=='__custom__';custom.disabled=check.checked};check.onchange=()=>{sel.disabled=check.checked;custom.disabled=check.checked};}
+$('dossierSearch').oninput=()=>{const q=$('dossierSearch').value.trim().toLowerCase();for(const cell of grid.querySelectorAll('[data-detail-label]'))cell.hidden=!cell.dataset.detailLabel.includes(q);for(const group of grid.querySelectorAll('.identityGroup')){const visible=[...group.querySelectorAll('[data-detail-label]')].some(cell=>!cell.hidden);group.hidden=!visible;if(q&&visible)group.open=true}};
 for(const [button,value] of [['dossierLockAll',true],['dossierUnlockAll',false]])$(button).onclick=()=>{for(const c of Object.values(controls)){c.check.checked=value;c.sel.disabled=value;c.custom.disabled=value}section.querySelector('#dossierDetailStatus').textContent='Locks changed; save dossier to keep them.'};
 const originalOpen=window.openCharacter;
 if(typeof originalOpen==='function'){window.openCharacter=function(id){originalOpen(id);currentId=id||null;hydrate()}}
