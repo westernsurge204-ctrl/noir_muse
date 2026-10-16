@@ -123,7 +123,7 @@ test('dossier fields save individually and appear in prompt',async({page})=>{
  await page.getByRole('button',{name:'Characters',exact:true}).click();
  await page.getByRole('button',{name:'Open dossier'}).click();
  await expect(page.locator('#detail-eye-shape')).toBeDisabled();
- await expect(page.getByRole('checkbox',{name:'Lock Eye shape'})).toBeChecked();
+ await expect(page.locator('#detail-eye-shape').closest('.field').locator('input[type=checkbox]')).toBeChecked();
 });
 
 test('dossier search and lock-all controls', async ({page})=>{
