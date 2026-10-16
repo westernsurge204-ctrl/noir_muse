@@ -240,3 +240,30 @@ test('prompt clearly labels category, subcategory and wardrobe specifics',async(
  await expect(page.locator('#prompt')).toContainText('Secondary/bottom color: Camel');
  await expect(page.locator('#prompt')).toContainText('Pattern / design: Tie-dye');
 });
+
+test('quality compiler reinforces swimsuit construction and real front selfie perspective',async({page})=>{
+ await start(page);await createCharacter(page,'Quality Muse');
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await page.locator('#five-category').selectOption('Bikini / swimwear');
+ await page.locator('#five-top').selectOption('Triangle bikini top');
+ await page.locator('.fiveSection').nth(1).locator('summary').click();
+ await page.locator('#five-photographer').selectOption('Front selfie');
+ await expect(page.locator('#prompt')).toContainText('SWIMWEAR CONSTRUCTION');
+ await expect(page.locator('#prompt')).toContainText('SELFIE PERSPECTIVE ENFORCEMENT');
+ await expect(page.locator('#prompt')).toContainText('natural fabric tension');
+ await expect(page.locator('#prompt')).toContainText('PHOTOGRAPHIC REALISM');
+ await expect(page.locator('#prompt')).toContainText('Quality Muse');
+});
+test('quality compiler prioritizes facial DNA and selected body proportions',async({page})=>{
+ await start(page);
+ await page.getByRole('button',{name:'Characters',exact:true}).click();
+ await page.getByRole('button',{name:'＋ New Character'}).click();
+ await page.locator('#cName').fill('DNA Muse');
+ await page.locator('.identityGroup').nth(4).locator('summary').click();
+ await page.locator('#detail-bust-proportions').selectOption('Full');
+ await page.getByRole('button',{name:'Save dossier'}).click();
+ await page.getByRole('button',{name:'Studio',exact:true}).click();
+ await expect(page.locator('#prompt')).toContainText('Bust: Full');
+ await expect(page.locator('#prompt')).toContainText('recognizable');
+ await expect(page.locator('#prompt')).toContainText('original identity references');
+});
