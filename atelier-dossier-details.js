@@ -19,7 +19,7 @@ const specs={
 'Fringe / bangs':['None','Curtain bangs','Full fringe','Side bangs','Wispy bangs'],
 'Hair parting':['Center','Left side','Right side','Natural uneven part'],
 'Hair volume':['Fine','Average','Full','Thick','Voluminous'],
-'Bust proportions':['Small','Average','Full','Proportionate to frame'],
+'Bust proportions':['Very small','Small','Small-medium','Medium','Medium-full','Full','Very full','Prominent','Proportionate to frame','Broad chest with full bust'],
 'Torso length':['Short torso','Balanced torso','Long torso'],
 'Leg proportions':['Shorter legs','Balanced','Long-legged'],
 'Overall silhouette':['Straight','Hourglass','Pear-shaped','Athletic','Soft curvy'],
